@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+    <s:String x:Key="VOFileList.ButtonSelect.Content">Select Folder</s:String>
+    <s:String x:Key="MainWindow.VOFileListOriginal.Title">Vanilla Character's VO Folder (e.g. SWATJudge)</s:String>
+    <s:String x:Key="MainWindow.VOFileListModded.Title">Your Modded Character's VO Folder (e.g. SWATJudge)</s:String>
+    <s:String x:Key="MainWindow.TextBlockPakName.Text">Pak name: </s:String>
+    <s:String x:Key="MainWindow.VOFileListNew.Title">Folder to save generated .pak</s:String>
+    <s:String x:Key="MainWindow.ButtonRevive.Content">Revive!</s:String>
+</ResourceDictionary>

@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+    <s:String x:Key="VOFileList.ButtonSelect.Content">选择文件夹</s:String>
+    <s:String x:Key="MainWindow.VOFileListOriginal.Title">原版角色语音文件夹 (如: SWATJudge)</s:String>
+    <s:String x:Key="MainWindow.VOFileListModded.Title">Mod角色语音文件夹 (如: SWATJudge)</s:String>
+    <s:String x:Key="MainWindow.TextBlockPakName.Text">打包名称: </s:String>
+    <s:String x:Key="MainWindow.VOFileListNew.Title">.pak打包存放处</s:String>
+    <s:String x:Key="MainWindow.ButtonRevive.Content">一键复活!</s:String>
+</ResourceDictionary>
