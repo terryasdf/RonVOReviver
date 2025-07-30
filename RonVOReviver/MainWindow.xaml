@@ -13,28 +13,67 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
+        
         <ui:VOFileList x:Name="VOFileListOriginal" Title="{DynamicResource MainWindow.VOFileListOriginal.Title}" Select="VOFileListOriginal_FolderSelect" Grid.Row="0"/>
         <ui:VOFileList x:Name="VOFileListModded" Title="{DynamicResource MainWindow.VOFileListModded.Title}" Select="VOFileListModded_FolderSelect" Grid.Row="1"/>
-        
-        <Grid Grid.Row="2" Margin="5,2,5,2">
+
+        <Grid Grid.Row="2" Margin="5,5,5,2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="{DynamicResource MainWindow.TextBlockPakName.Text}" />
-            <TextBox x:Name="TextBoxPakName" Grid.Column="1" Margin="1,1,1,1" Text="pakchunk-99_RevivedVO"/>
-            <TextBlock Text=".pak" Grid.Column="2" />
+            <Grid Margin="0,0,5,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{DynamicResource MainWindow.TextBlockPakName.Text}" />
+                <TextBox x:Name="TextBoxPakName" Grid.Column="1" Margin="1,1,1,1" TextChanged="TextBoxPakName_TextChanged"/>
+                <TextBlock Text=".pak" Grid.Column="2" />
+            </Grid>
+            <Grid Grid.Column="1" Margin="5,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{DynamicResource MainWindow.TextBlockCharacter.Text}" />
+                <TextBox x:Name="TextBoxCharacter" Grid.Column="1" Margin="1,1,1,1" IsReadOnly="True" IsReadOnlyCaretVisible="True"/>
+            </Grid>
         </Grid>
 
-        <ui:VOFileList x:Name="VOFileListNew" Title="{DynamicResource MainWindow.VOFileListNew.Title}" Grid.Row="3"/>
-        <Button Grid.Row="4" Content="{DynamicResource MainWindow.ButtonRevive.Content}" HorizontalAlignment="Center" Margin="1,1,1,1" FontSize="16"/>
-        <StatusBar Grid.Row="5">
-            <RadioButton x:Name="ButtonENUS" Content="English" GroupName="lang" IsChecked="True" Checked="ButtonENUS_Checked"/>
-            <RadioButton x:Name="ButtonZHCN" Content="中文" GroupName="lang" Checked="ButtonZHCN_Checked"/>
-            <TextBlock x:Name="TextBlockProgress" TextWrapping="Wrap"/>
-        </StatusBar>
+        <ui:VOFileList x:Name="VOFileListDst" Title="{DynamicResource MainWindow.VOFileListNew.Title}" Select="VOFileListDst_FolderSelect" Grid.Row="3"/>
+        
+        <Button x:Name="ButtonRevive" Grid.Row="4" Content="{DynamicResource MainWindow.ButtonRevive.Content}" HorizontalAlignment="Center" Margin="1,1,1,1" FontSize="16" IsEnabled="False" Click="ButtonRevive_Click"/>
+        
+        <Grid Grid.Row="5" Margin="5,5,5,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="{DynamicResource MainWindow.TextBlockMissing.Text}"/>
+            <ListBox x:Name="ListBoxMissing" Grid.Row="1"/>
+            <TextBlock Text="{DynamicResource MainWindow.TextBlockExtra.Text}" Grid.Column="1"/>
+            <ListBox x:Name="ListBoxExtra" Grid.Row="1" Grid.Column="1"/>
+        </Grid>
+
+        <StatusBar Grid.Row="6"/>
+        <Grid Grid.Row="6" Margin="0,5,0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <RadioButton x:Name="ButtonENUS" Content="English" GroupName="lang" IsChecked="True" Checked="ButtonENUS_Checked" Margin="5,0,5,0"/>
+            <RadioButton x:Name="ButtonZHCN" Content="中文" GroupName="lang" Checked="ButtonZHCN_Checked" Grid.Column="1" Margin="5,0,5,0"/>
+            <TextBlock x:Name="TextBlockProgress" TextWrapping="Wrap" Grid.Column="2" Margin="5,0,5,0" HorizontalAlignment="Right"/>
+        </Grid>
     </Grid>
 </Window>

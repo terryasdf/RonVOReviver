@@ -13,8 +13,15 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock TextWrapping="Wrap" Text="{Binding Title}"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock TextWrapping="Wrap" Text="{Binding Title}"/>
+            <TextBlock x:Name="TextBlockItemCount" TextWrapping="Wrap" Grid.Column="1"/>
+        </Grid>
         <ui:FolderSelector x:Name="FolderSelector" Select="FolderSelector_Select" Grid.Row="1"/>
-        <ListBox d:ItemsSource="{Binding Items}" MinHeight="50" Grid.Row="2"/>
+        <ListBox x:Name="ItemList" Grid.Row="2"/>
     </Grid>
 </UserControl>

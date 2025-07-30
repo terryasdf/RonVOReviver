@@ -14,10 +14,14 @@ public class VOManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private string _folderPath = string.Empty;
-    private Dictionary<string, List<int>> _voIndicesMap = [];
-    public string[] Files = [];
-    public int NumVo { get; protected set; }  = 0;
+    private readonly Dictionary<string, List<int>> _voIndicesMap = [];
+    public List<string> Files { get; } = [];
+
+    /// <summary>
+    /// Dummy constructor.
+    /// </summary>
+    public VOManager() { }
+
 
     public static string GetVoType(string file, out int index)
     {
@@ -28,49 +32,63 @@ public class VOManager
         return string.Concat(components);
     }
 
-    public bool ContainsVoType(string voType) => _voIndicesMap.ContainsKey(voType.ToLower());
+    public Dictionary<string, List<int>>.KeyCollection GetVOTypes() => _voIndicesMap.Keys;
 
-    public List<int> GetVoIndices(string voType)
+    public bool HasVOType(string voType) => _voIndicesMap.ContainsKey(voType);
+
+    public int GetMaxIndex(string voType)
     {
-        return _voIndicesMap[voType];
+        return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices.Max() : 0;
     }
 
-    public bool SetFolderPath(string path, Callback progressCallback, Callback onFormatExceptionCallback)
+    public int GetCount(string voType)
     {
-        _folderPath = path;
+        return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices.Count : 0;
+    }
+
+    /// <summary>
+    /// Reads from <paramref name="path"/> and counts types of VO files.
+    /// </summary>
+    /// <param name="path">The character folder (e.g. SWATJudge)</param>
+    /// <param name="progressCallback">
+    /// Called upon reading each successful VO file
+    /// </param>
+    /// <param name="onFormatExceptionCallback">
+    /// Called upon unintended naming format (should be like XXXX_1.ogg)
+    /// </param>
+    public VOManager(string path, Callback progressCallback, Callback onFormatExceptionCallback)
+    {
         _voIndicesMap = [];
-        if (!File.Exists(path))
+        if (!Directory.Exists(path))
         {
-            return false;
+            return;
         }
 
-        Files = Directory.GetFiles(path, "*.ogg");
-        NumVo = Files.Length;
-        for (int i = 0; i < NumVo; ++i)
+        string[] filesArray = Directory.GetFiles(path, "*.ogg");
+        for (int i = 0; i < filesArray.Length; ++i)
         {
-            Files[i] = Files[i].ToLower();
+            // Pak contents are not case-sensitive.
+            filesArray[i] = filesArray[i].ToLower();
             try
             {
-                string voType = GetVoType(Files[i], out int id);
+                string voType = GetVoType(filesArray[i], out int id);
+                Logger.Debug($"Found .ogg under folder: {voType}, id={id}");
 
-                // Pak contents are not case-sensitive.
-                voType = voType.ToLower();
-                Logger.Info($"Found .ogg under folder: {voType}, id={id}");
-
-                if (_voIndicesMap[voType] is null)
+                if (!_voIndicesMap.TryGetValue(voType, out List<int>? indices))
                 {
-                    _voIndicesMap[voType] = [];
+                    indices = [];
+                    _voIndicesMap[voType] = indices;
                 }
-                _voIndicesMap[voType].Add(id);
-                progressCallback(Files[i]);
+                Files.Add(filesArray[i]);
+                indices.Add(id);
+                progressCallback(filesArray[i]);
             }
             catch (FormatException e)
             {
-                Logger.Error($"Parsing failed at {Files[i]}: {e.Message}");
-                onFormatExceptionCallback(Files[i]);
+                Logger.Error($"Parsing failed at {filesArray[i]}: {e.Message}");
+                onFormatExceptionCallback(filesArray[i]);
             }
         }
-        Array.Sort(Files);
-        return true;
+        Files.Sort();
     }
 }

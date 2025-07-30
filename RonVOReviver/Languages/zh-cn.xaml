@@ -5,6 +5,18 @@
     <s:String x:Key="MainWindow.VOFileListOriginal.Title">原版角色语音文件夹 (如: SWATJudge)</s:String>
     <s:String x:Key="MainWindow.VOFileListModded.Title">Mod角色语音文件夹 (如: SWATJudge)</s:String>
     <s:String x:Key="MainWindow.TextBlockPakName.Text">打包名称: </s:String>
+    <s:String x:Key="MainWindow.TextBlockCharacter.Text">替换角色: </s:String>
     <s:String x:Key="MainWindow.VOFileListNew.Title">.pak打包存放处</s:String>
     <s:String x:Key="MainWindow.ButtonRevive.Content">一键复活!</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.LoadedOriginal.Text">已加载原版语音</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.LoadedModded.Text">已加载Mod语音</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.CanRevive.Text">可启动一键复活</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.CopiedVO.Text">已复制语音文件</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.PakSuccess.Text">.pak打包成功</s:String>
+    <s:String x:Key="MainWindow.TextBlockMissing.Text">Mod语音缺失:</s:String>
+    <s:String x:Key="MainWindow.TextBlockExtra.Text">Mod中发现了原版未出现语音种类:</s:String>
+    <s:String x:Key="MainWindow.MessageBoxError.Caption">错误</s:String>
+    <s:String x:Key="MainWindow.MessageBoxFormatException.Text">下列文件命名格式不合规，已忽略:</s:String>
+    <s:String x:Key="MainWindow.MessageBoxFolderError.Text">无法访问文件夹:</s:String>
+    <s:String x:Key="MainWindow.MessageBoxFileError.Text">下列文件访问错误，已忽略:</s:String>
 </ResourceDictionary>

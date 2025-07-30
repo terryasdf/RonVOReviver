@@ -2,11 +2,14 @@
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -31,15 +34,6 @@ namespace RonVOReviver.UI
             set => SetValue(TitleProperty, value);
         }
 
-        public static readonly DependencyProperty ItemsProperty = DependencyProperty.Register(
-            "Items", typeof(string[]), typeof(VOFileList));
-
-        public string[] Items
-        {
-            get => (string[])GetValue(ItemsProperty);
-            set => SetValue(ItemsProperty, value);
-        }
-
         public static readonly RoutedEvent SelectEvent = EventManager.RegisterRoutedEvent(
             "Select", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(VOFileList));
 
@@ -54,6 +48,18 @@ namespace RonVOReviver.UI
         public VOFileList()
         {
             InitializeComponent();
+        }
+
+        public void ClearItems()
+        {
+            ItemList.Items.Clear();
+            TextBlockItemCount.Text = string.Empty;
+        }
+
+        public void AddItem(string item)
+        {
+            ItemList.Items.Add(item);
+            TextBlockItemCount.Text = ItemList.Items.Count.ToString();
         }
 
         private void FolderSelector_Select(object sender, RoutedEventArgs e)

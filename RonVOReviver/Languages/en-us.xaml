@@ -2,9 +2,21 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
     <s:String x:Key="VOFileList.ButtonSelect.Content">Select Folder</s:String>
-    <s:String x:Key="MainWindow.VOFileListOriginal.Title">Vanilla Character's VO Folder (e.g. SWATJudge)</s:String>
-    <s:String x:Key="MainWindow.VOFileListModded.Title">Your Modded Character's VO Folder (e.g. SWATJudge)</s:String>
+    <s:String x:Key="MainWindow.VOFileListOriginal.Title">Vanilla Character's VO Folder (e.g. SWATJudge):</s:String>
+    <s:String x:Key="MainWindow.VOFileListModded.Title">Your Modded Character's VO Folder (e.g. SWATJudge):</s:String>
     <s:String x:Key="MainWindow.TextBlockPakName.Text">Pak name: </s:String>
-    <s:String x:Key="MainWindow.VOFileListNew.Title">Folder to save generated .pak</s:String>
+    <s:String x:Key="MainWindow.TextBlockCharacter.Text">Character: </s:String>
+    <s:String x:Key="MainWindow.VOFileListNew.Title">Folder to save generated .pak:</s:String>
     <s:String x:Key="MainWindow.ButtonRevive.Content">Revive!</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.LoadedOriginal.Text">Loaded vanilla VO.</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.LoadedModded.Text">Loaded modded VO.</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.CanRevive.Text">You can now start reviving.</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.CopiedVO.Text">Copied VO files.</s:String>
+    <s:String x:Key="MainWindow.TextBlockProgess.PakSuccess.Text">.pak successfully generated.</s:String>
+    <s:String x:Key="MainWindow.TextBlockMissing.Text">Missing in modded VO:</s:String>
+    <s:String x:Key="MainWindow.TextBlockExtra.Text">Extra VO types found in modded VO:</s:String>
+    <s:String x:Key="MainWindow.MessageBoxError.Caption">Error</s:String>
+    <s:String x:Key="MainWindow.MessageBoxFormatException.Text">The following files are skipped due to incorrect format:</s:String>
+    <s:String x:Key="MainWindow.MessageBoxFolderError.Text">Failed to read the folder:</s:String>
+    <s:String x:Key="MainWindow.MessageBoxFileError.Text">The following files are skipped due to errors:</s:String>
 </ResourceDictionary>
