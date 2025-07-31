@@ -2,6 +2,7 @@
 using NLog;
 using RonVOReviver.Reviver;
 using RonVOReviver.UI;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,13 +26,13 @@ namespace RonVOReviver
         private static readonly ResourceDictionary DictionaryZHCN = [];
         private static readonly string DefaultPakName = "pakchunk-99_RevivedVO";
 
-        private string _messageBoxErrorCaption = (string)Application.Current.
+        private static string _messageBoxErrorCaption = (string)Application.Current.
             Resources["MainWindow.MessageBoxError.Caption"];
-        private string _messageBoxFormatExceptionText = (string)Application.Current.
+        private static string _messageBoxFormatExceptionText = (string)Application.Current.
             Resources["MainWindow.MessageBoxFormatException.Text"];
-        private string _messageBoxFolderErrorText = (string)Application.Current.
+        private static string _messageBoxFolderErrorText = (string)Application.Current.
             Resources["MainWindow.MessageBoxFolderError.Text"];
-        private string _messageBoxFileErrorText = (string)Application.Current.
+        private static string _messageBoxFileErrorText = (string)Application.Current.
             Resources["MainWindow.MessageBoxFileError.Text"];
 
         private readonly VOReviver _reviver = new();
@@ -69,6 +70,12 @@ namespace RonVOReviver
             ButtonRevive.IsEnabled = true;
         }
 
+        public static void ShowErrorMessageBox(string text)
+        {
+            MessageBox.Show(text, _messageBoxErrorCaption,MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+
         private void VOFileListOriginal_FolderSelect(object sender, RoutedEventArgs e)
         {
             Logger.Info($"Original VO Folder chosen: {VOFileListOriginal.FolderPath}");
@@ -76,25 +83,36 @@ namespace RonVOReviver
             VOFileListOriginal.ClearItems();
 
             List<string> skippedVOFiles = [];
-            bool isSuccessful = _reviver.SetOriginalVOFolderPath(VOFileListOriginal.FolderPath,
-                (path) => VOFileListOriginal.AddItem(path),
-                (path) => skippedVOFiles.Add(path));
-            if (!isSuccessful)
+            try
             {
-                string message = $"{_messageBoxFolderErrorText}\n{VOFileListOriginal.FolderPath}";
-                MessageBox.Show(message, _messageBoxErrorCaption);
-                return;
-            }
-            if (skippedVOFiles.Count > 0)
-            {
-                string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
-                MessageBox.Show(message);
-            }
+                _reviver.SetOriginalVOFolderPath(VOFileListOriginal.FolderPath,
+                    (path) => VOFileListOriginal.AddItem(path),
+                    (path) => skippedVOFiles.Add(path));
 
-            VOFileListOriginal.IsEnabled = true;
-            TextBoxCharacter.Text = System.IO.Path.GetFileName(VOFileListOriginal.FolderPath);
-            TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
-                "MainWindow.TextBlockProgess.LoadedOriginal.Text");
+                if (skippedVOFiles.Count > 0)
+                {
+                    string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
+                    MessageBox.Show(message);
+                }
+
+                VOFileListOriginal.IsEnabled = true;
+                TextBoxCharacter.Text = System.IO.Path.GetFileName(VOFileListOriginal.FolderPath);
+                TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
+                    "MainWindow.TextBlockProgess.LoadedOriginal.Text");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                VOFileListOriginal.FolderPath = string.Empty;
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowErrorMessageBox(message);
+            }
+            catch (IOException ex)
+            {
+                VOFileListOriginal.FolderPath = string.Empty;
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowErrorMessageBox(message);
+            }
+            
             CheckCanRevive();
         }
 
@@ -106,26 +124,35 @@ namespace RonVOReviver
 
             List<string> skippedVOFiles = [];
             List<string> failedSubtitles = [];
-            bool isSuccessful = _reviver.SetModdedVOFolderPath(VOFileListModded.FolderPath,
-                (path) => VOFileListModded.AddItem(path),
-                (path) => skippedVOFiles.Add(path),
-                (path) => failedSubtitles.Add(path));
-            if (!isSuccessful)
+            try
             {
-                string message = $"{_messageBoxFolderErrorText}\n{VOFileListModded.FolderPath}";
-                MessageBox.Show(message, _messageBoxErrorCaption);
-                return;
+                _reviver.SetModdedVOFolderPath(VOFileListModded.FolderPath,
+                    (path) => VOFileListModded.AddItem(path),
+                    (path) => skippedVOFiles.Add(path));
+
+                if (skippedVOFiles.Count > 0)
+                {
+                    string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
+                    MessageBox.Show(message, _messageBoxErrorCaption);
+                }
+
+                VOFileListModded.IsEnabled = true;
+                TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
+                    "MainWindow.TextBlockProgess.LoadedModded.Text");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                VOFileListModded.FolderPath = string.Empty;
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowErrorMessageBox(message);
+            }
+            catch (IOException ex)
+            {
+                VOFileListModded.FolderPath = string.Empty;
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowErrorMessageBox(message);
             }
 
-            if (skippedVOFiles.Count > 0)
-            {
-                string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
-                MessageBox.Show(message, _messageBoxErrorCaption);
-            }
-
-            VOFileListModded.IsEnabled = true;
-            TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
-                "MainWindow.TextBlockProgess.LoadedModded.Text");
             CheckCanRevive();
         }
         private void TextBoxPakName_TextChanged(object sender, TextChangedEventArgs e)
@@ -146,26 +173,35 @@ namespace RonVOReviver
             VOFileListDst.ClearItems();
 
             List<string> FailedFiles = [];
-            bool isSuccessful = _reviver.CopyVOFiles(out List<string> missingVOTypes,
-                (path) => ListBoxExtra.Items.Add(path),
-                (path) =>
-                {
-                    TextBlockProgress.Text = path;
-                    VOFileListDst.AddItem(path);
-                },
-                (path) => FailedFiles.Add(path));
-            if (!isSuccessful)
+            try
             {
-                string message = $"{_messageBoxFolderErrorText}\n{VOFileListDst.FolderPath}";
-                MessageBox.Show(message, _messageBoxErrorCaption);
-                return;
-            }
+                _reviver.CopyVOFiles(out List<string> missingVOTypes,
+                    (path) => ListBoxExtra.Items.Add(path),
+                    (path) =>
+                    {
+                        TextBlockProgress.Text = path;
+                        VOFileListDst.AddItem(path);
+                    },
+                    (path) => FailedFiles.Add(path));
 
-            ListBoxMissing.ItemsSource = missingVOTypes;
-            if (FailedFiles.Count > 0)
+                ListBoxMissing.ItemsSource = missingVOTypes;
+                if (FailedFiles.Count > 0)
+                {
+                    string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
+                    MessageBox.Show(message, _messageBoxErrorCaption);
+                }
+            }
+            catch (UnauthorizedAccessException ex)
             {
-                string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
-                MessageBox.Show(message, _messageBoxErrorCaption);
+                VOFileListDst.FolderPath = string.Empty;
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowErrorMessageBox(message);
+            }
+            catch (IOException ex)
+            {
+                VOFileListDst.FolderPath = string.Empty;
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowErrorMessageBox(message);
             }
 
             CheckCanRevive();

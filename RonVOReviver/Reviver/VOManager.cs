@@ -15,13 +15,14 @@ public class VOManager
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly Dictionary<string, List<int>> _voIndicesMap = [];
+
+    public string FolderPath { get; protected set; } = string.Empty;
     public List<string> Files { get; } = [];
 
     /// <summary>
     /// Dummy constructor.
     /// </summary>
     public VOManager() { }
-
 
     public static string GetVoType(string file, out int index)
     {
@@ -58,13 +59,8 @@ public class VOManager
     /// </param>
     public VOManager(string path, Callback progressCallback, Callback onFormatExceptionCallback)
     {
-        _voIndicesMap = [];
-        if (!Directory.Exists(path))
-        {
-            return;
-        }
-
         string[] filesArray = Directory.GetFiles(path, "*.ogg");
+        _voIndicesMap = [];
         for (int i = 0; i < filesArray.Length; ++i)
         {
             // Pak contents are not case-sensitive.
@@ -90,5 +86,6 @@ public class VOManager
             }
         }
         Files.Sort();
+        FolderPath = path;
     }
 }

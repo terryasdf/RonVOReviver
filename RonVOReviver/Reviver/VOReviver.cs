@@ -16,60 +16,28 @@ public class VOReviver
 
     private VOManager _originalVOManager = new();
     private VOManager _moddedVOManager = new();
-    private SubtitleHandler _subtitleHandler = new();
 
     private string _destinationFolderPath = string.Empty;
 
     public int ZeroFillLength { get; set; } = 1;
     public string Character { get; protected set; } = string.Empty;
 
-    public bool SetOriginalVOFolderPath(string path, Callback progressCallback,
+    public void SetOriginalVOFolderPath(string path, Callback progressCallback,
         Callback onFormatExceptionCallback)
     {
-        try
-        {
-            _originalVOManager = new(path, progressCallback, onFormatExceptionCallback);
-            Character = Path.GetFileName(path);
-        }
-        catch (UnauthorizedAccessException e)
-        {
-            Logger.Error($"Failed to read folder due to unauthorized access: " +
-                $"{path}\n{e.Message}");
-            return false;
-        }
-        catch (IOException e)
-        {
-            Logger.Error($"Failed to read folder: {path}\n{e.Message}");
-            return false;
-        }
-        return true;
+        _originalVOManager = new(path, progressCallback, onFormatExceptionCallback);
+        Character = Path.GetFileName(path);
     }
 
-    public bool SetModdedVOFolderPath(string path, Callback progressCallback,
-        Callback onFormatExceptionCallback, Callback onSubtitleIOExceptionCallback)
+    public void SetModdedVOFolderPath(string path, Callback progressCallback,
+        Callback onFormatExceptionCallback)
     {
-        try
-        {
-            _moddedVOManager = new(path, progressCallback, onFormatExceptionCallback);
-        }
-        catch (UnauthorizedAccessException e)
-        {
-            Logger.Error($"Failed to read folder due to unauthorized access: " +
-                $"{path}\n{e.Message}");
-            return false;
-        }
-        catch (IOException e)
-        {
-            Logger.Error($"Failed to read folder: {path}\n{e.Message}");
-            return false;
-        }
-        _subtitleHandler = new(path, onSubtitleIOExceptionCallback);
-        return true;
+        _moddedVOManager = new(path, progressCallback, onFormatExceptionCallback);
     }
 
     public void SetDestionationFolderPath(string path) => _destinationFolderPath = path;
 
-    public bool CopyVOFiles(out List<string> missingVOTypes,
+    public void CopyVOFiles(out List<string> missingVOTypes,
         Callback extraVOTypeFileCallback, Callback progressCallback,
         Callback onIOExceptionCallback)
     {
@@ -77,29 +45,19 @@ public class VOReviver
 
         // Clear destination directory
         string newVOFolderPath = $"{_destinationFolderPath}\\{InPakVOPath}\\{Character}";
-        try
+        if (Directory.Exists(_destinationFolderPath))
         {
-            if (Directory.Exists(_destinationFolderPath))
-            {
-                Directory.Delete(_destinationFolderPath, true);
-                Logger.Debug($"Deleted folder: {_destinationFolderPath}");
-            }
-            Directory.CreateDirectory(newVOFolderPath);
+            Directory.Delete(_destinationFolderPath, true);
+            Logger.Debug($"Deleted folder: {_destinationFolderPath}");
         }
-        catch (UnauthorizedAccessException e)
-        {
-            Logger.Error($"Unauthorized access to folder: {_destinationFolderPath}\n{e.Message}");
-            return false;
-        }
-        catch (IOException e)
-        {
-            Logger.Error($"Failed to clear folder: {_destinationFolderPath}\n{e.Message}");
-            return false;
-        }
+        Directory.CreateDirectory(newVOFolderPath);
 
         int nextTypeCur = 0;
         int numModdedVO = _moddedVOManager.Files.Count;
         string[] moddedVOFiles = [.. _moddedVOManager.Files];
+
+        SubtitleHandler subtitleHandler = new(_moddedVOManager.FolderPath,
+            newVOFolderPath, onIOExceptionCallback);
 
         for (int i = 0; i < numModdedVO; i = nextTypeCur)
         {
@@ -160,7 +118,5 @@ public class VOReviver
                 missingVOTypes.Add(voType);
             }
         }
-
-        return true;
     }
 }

@@ -34,6 +34,15 @@ namespace RonVOReviver.UI
             set => SetValue(TitleProperty, value);
         }
 
+        public static readonly DependencyProperty FolderPathProperty = DependencyProperty.Register(
+            "FolderPath", typeof(string), typeof(VOFileList));
+
+        public string FolderPath
+        {
+            get => (string)GetValue(FolderPathProperty);
+            set => SetValue(FolderPathProperty, value);
+        }
+
         public static readonly RoutedEvent SelectEvent = EventManager.RegisterRoutedEvent(
             "Select", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(VOFileList));
 
@@ -43,11 +52,10 @@ namespace RonVOReviver.UI
             remove => RemoveHandler(SelectEvent, value);
         }
 
-        public string FolderPath { get; protected set; } = string.Empty;
-
         public VOFileList()
         {
             InitializeComponent();
+            FolderPath = string.Empty;
         }
 
         public void ClearItems()
@@ -64,8 +72,8 @@ namespace RonVOReviver.UI
 
         private void FolderSelector_Select(object sender, RoutedEventArgs e)
         {
-            FolderPath = FolderSelector.FolderPath;
             RaiseEvent(new RoutedEventArgs(SelectEvent));
+            FolderPath = FolderSelector.FolderPath;
         }
     }
 }

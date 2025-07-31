@@ -8,36 +8,56 @@ using System.Threading.Tasks;
 
 namespace RonVOReviver.Reviver;
 
-public class SubtitleHandler
+public class SubtitleHandler : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly Dictionary<string, Dictionary<string, string>> _subtitles = [];
+
+    private Dictionary<string, StreamWriter> _writers = [];
 
     /// <summary>
     /// Dummy constructor.
     /// </summary>
     public SubtitleHandler() { }
 
-    public SubtitleHandler(string folderPath, Callback onIOExceptionCallback)
+    public void Dispose()
     {
-        string[] files = Directory.GetFiles(folderPath, "sub_*.csv");
+        foreach (StreamWriter writer in _writers.Values)
+        {
+            writer.Dispose();
+        }
+        GC.SuppressFinalize(this);
+    }
+
+    public SubtitleHandler(string oldSubtitleFolderPath, string outputFolderPath,
+        Callback onIOExceptionCallback)
+    {
+        string[] files = Directory.GetFiles(oldSubtitleFolderPath, "sub_*.csv");
         foreach (string file in files)
         {
+            string fileName = Path.GetFileName(file).ToLower();
             try
             {
                 using StreamReader sr = new(file);
                 // Skip the first row, which stores the indices
                 sr.ReadLine();
                 Dictionary<string, string> dict = [];
-                while (sr.Peek() >= 0)
+                string? row;
+                while ((row = sr.ReadLine()) is not null)
                 {
-                    string row = sr.ReadLine()!;
-                    string[] cells = row.Split(',');
+                    string[] cells = row.Trim().Split(',');
                     dict[cells[0]] = cells[1];
                 }
-                _subtitles[Path.GetFileName(file).ToLower()] = dict;
+                _writers[fileName] = new StreamWriter($"{outputFolderPath}\\{fileName}");
+                _subtitles[fileName] = dict;
                 Logger.Debug($"Read subtitle file: {file}");
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                onIOExceptionCallback(file);
+                Logger.Error($"Unauthorized access to write new subtitle file: {
+                    outputFolderPath}\\{fileName}\n{e.Message}");
             }
             catch (IOException e)
             {
@@ -45,5 +65,10 @@ public class SubtitleHandler
                 Logger.Error($"Failed to read subtitle file: {file}\n{e.Message}");
             }
         }
+    }
+
+    public void WriteLine(string oldLabel, string newLabel)
+    {
+        ;
     }
 }
