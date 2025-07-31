@@ -83,8 +83,9 @@ public class VOReviver
             {
                 for (int j = i; j < nextTypeCur; ++j)
                 {
-                    string dstFile = $"{newVOFolderPath}\\{voType}_{index++.ToString(
-                        $"D{ZeroFillLength}")}.ogg";
+                    string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
+                    string newKey = $"{voType}_{index++.ToString($"D{ZeroFillLength}")}";
+                    string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
                     try
                     {
                         File.Copy(moddedVOFiles[j], dstFile);
@@ -95,6 +96,7 @@ public class VOReviver
                             Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
                         }
                         progressCallback(dstFile);
+                        subtitleHandler.WriteLine(oldKey, newKey);
                     }
                     catch (UnauthorizedAccessException e)
                     {

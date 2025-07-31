@@ -11,6 +11,8 @@ namespace RonVOReviver.Reviver;
 public class SubtitleHandler : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    // TODO: Check header content
+    private static readonly string HeaderContent = "Key,Content,";
 
     private readonly Dictionary<string, Dictionary<string, string>> _subtitles = [];
 
@@ -40,7 +42,7 @@ public class SubtitleHandler : IDisposable
             try
             {
                 using StreamReader sr = new(file);
-                // Skip the first row, which stores the indices
+                // Skip the header row
                 sr.ReadLine();
                 Dictionary<string, string> dict = [];
                 string? row;
@@ -50,6 +52,7 @@ public class SubtitleHandler : IDisposable
                     dict[cells[0]] = cells[1];
                 }
                 _writers[fileName] = new StreamWriter($"{outputFolderPath}\\{fileName}");
+                _writers[fileName].Write(HeaderContent);
                 _subtitles[fileName] = dict;
                 Logger.Debug($"Read subtitle file: {file}");
             }
@@ -67,8 +70,21 @@ public class SubtitleHandler : IDisposable
         }
     }
 
-    public void WriteLine(string oldLabel, string newLabel)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="oldKey"></param>
+    /// <param name="newKey"></param>
+    public void WriteLine(string oldKey, string newKey)
     {
-        ;
+        foreach ((string fileName, StreamWriter writer) in _writers)
+        {
+            if (!_subtitles[fileName].TryGetValue(oldKey, out string? content))
+            {
+                continue;
+            }
+            string line = $"{newKey},{content},";
+            writer.WriteLine(line);
+        }
     }
 }

@@ -72,8 +72,8 @@ namespace RonVOReviver.UI
 
         private void FolderSelector_Select(object sender, RoutedEventArgs e)
         {
-            RaiseEvent(new RoutedEventArgs(SelectEvent));
             FolderPath = FolderSelector.FolderPath;
+            RaiseEvent(new RoutedEventArgs(SelectEvent));
         }
     }
 }
