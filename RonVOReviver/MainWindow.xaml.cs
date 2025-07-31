@@ -62,7 +62,8 @@ namespace RonVOReviver
             if (VOFileListOriginal.FolderPath.Equals(string.Empty) ||
                 VOFileListModded.FolderPath.Equals(string.Empty) ||
                 VOFileListDst.FolderPath.Equals(string.Empty) ||
-                TextBoxPakName.Text.Equals(string.Empty))
+                TextBoxPakName.Text.Equals(string.Empty) ||
+                TextBoxCharacter.Text.Equals(string.Empty))
             {
                 return;
             }
@@ -92,10 +93,10 @@ namespace RonVOReviver
             }
 
             VOFileListOriginal.IsEnabled = true;
+            // CheckCanRevive() is called after changing TextBoxCharacter
             TextBoxCharacter.Text = System.IO.Path.GetFileName(VOFileListOriginal.FolderPath);
             TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
                 "MainWindow.TextBlockProgess.LoadedOriginal.Text");
-            CheckCanRevive();
         }
 
         private void VOFileListModded_FolderSelect(object sender, RoutedEventArgs e)
@@ -128,9 +129,16 @@ namespace RonVOReviver
                 "MainWindow.TextBlockProgess.LoadedModded.Text");
             CheckCanRevive();
         }
+
         private void TextBoxPakName_TextChanged(object sender, TextChangedEventArgs e)
         {
             _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
+            CheckCanRevive();
+        }
+
+        private void TextBoxCharacter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _reviver.Character = TextBoxCharacter.Text;
             CheckCanRevive();
         }
 
