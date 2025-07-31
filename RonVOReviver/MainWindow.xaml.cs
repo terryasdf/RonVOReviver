@@ -25,7 +25,7 @@ namespace RonVOReviver
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly ResourceDictionary DictionaryENUS = [];
         private static readonly ResourceDictionary DictionaryZHCN = [];
-        private static readonly string DefaultPakName = "pakchunk-99_RevivedVO";
+        private static readonly string DefaultPakName = "pakchunk99-RevivedVO";
         private static readonly string RegexInvalidChars =
             $"[{string.Concat(System.IO.Path.GetInvalidFileNameChars())}]";
 
