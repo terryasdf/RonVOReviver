@@ -56,7 +56,7 @@ public class VOReviver
         int numModdedVO = _moddedVOManager.Files.Count;
         string[] moddedVOFiles = [.. _moddedVOManager.Files];
 
-        SubtitleHandler subtitleHandler = new(_moddedVOManager.FolderPath,
+        using SubtitleHandler subtitleHandler = new(_moddedVOManager.FolderPath,
             newVOFolderPath, onIOExceptionCallback);
 
         for (int i = 0; i < numModdedVO; i = nextTypeCur)

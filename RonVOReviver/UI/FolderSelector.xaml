@@ -12,7 +12,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="TextBoxFolderPath" TextWrapping="Wrap" IsReadOnly="True" IsReadOnlyCaretVisible="True"/>
+        <TextBox x:Name="TextBoxFolderPath" Text="{Binding FolderPath}" TextWrapping="Wrap" IsReadOnly="True" IsReadOnlyCaretVisible="True"/>
         <Button x:Name="ButtonSelect" Content="{DynamicResource VOFileList.ButtonSelect.Content}" Grid.Column="1" Click="ButtonSelect_Click"/>
     </Grid>
 </UserControl>

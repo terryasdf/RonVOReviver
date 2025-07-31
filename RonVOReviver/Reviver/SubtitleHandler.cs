@@ -1,6 +1,9 @@
-﻿using NLog;
+﻿using CsvHelper;
+using NLog;
 using System;
 using System.Collections.Generic;
+using System.Formats.Asn1;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,11 +15,18 @@ public class SubtitleHandler : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     // TODO: Check header content
-    private static readonly string HeaderContent = "Key,Content,";
+    private static readonly string HeaderContent = "Key,Dialogue,Context";
 
     private readonly Dictionary<string, Dictionary<string, string>> _subtitles = [];
 
-    private Dictionary<string, StreamWriter> _writers = [];
+    private Dictionary<string, CsvWriter> _writers = [];
+
+    public class Record
+    {
+        public required string Key { get; set; }
+        public required string Dialogue { get; set; }
+        public required string Context { get; set; }
+    }
 
     /// <summary>
     /// Dummy constructor.
@@ -25,7 +35,7 @@ public class SubtitleHandler : IDisposable
 
     public void Dispose()
     {
-        foreach (StreamWriter writer in _writers.Values)
+        foreach (CsvWriter writer in _writers.Values)
         {
             writer.Dispose();
         }
@@ -42,22 +52,32 @@ public class SubtitleHandler : IDisposable
             try
             {
                 using StreamReader sr = new(file);
+                using CsvReader csvReader = new(sr, CultureInfo.InvariantCulture);
+
                 // Skip the header row
-                sr.ReadLine();
+                csvReader.Read();
+                csvReader.ReadHeader();
                 Dictionary<string, string> dict = [];
-                string? row;
-                while ((row = sr.ReadLine()) is not null)
+                while (csvReader.Read())
                 {
-                    string[] cells = row.Trim().Split(',');
-                    if (cells.Length < 2)
+                    string? key = csvReader.GetField("Key");
+                    string? dialogue = csvReader.GetField("Dialogue");
+                    if (key == null || dialogue == null)
                     {
-                        continue;
+                        throw new FileFormatException($"Invalid csv format in {file}");
                     }
-                    dict[cells[0]] = cells[1];
+                    key = key.ToLower();
+                    Logger.Debug($"Read from CSV: key = {key}, dialogue = {dialogue}");
+                    dict[key] = dialogue;
                 }
-                _writers[fileName] = new StreamWriter($"{outputFolderPath}\\{fileName}");
-                _writers[fileName].Write(HeaderContent);
+
+                StreamWriter sw = new($"{outputFolderPath}\\{fileName}");
+                CsvWriter csvWriter = new(sw, CultureInfo.InvariantCulture);
+                _writers[fileName] = csvWriter;
+                csvWriter.WriteHeader<Record>();
+                csvWriter.NextRecord();
                 _subtitles[fileName] = dict;
+
                 Logger.Debug($"Read subtitle file: {file}");
             }
             catch (UnauthorizedAccessException e)
@@ -65,6 +85,11 @@ public class SubtitleHandler : IDisposable
                 onIOExceptionCallback(file);
                 Logger.Error($"Unauthorized access to write new subtitle file: {
                     outputFolderPath}\\{fileName}\n{e.Message}");
+            }
+            catch (FileFormatException e)
+            {
+                onIOExceptionCallback(file);
+                Logger.Error($"Invalid file format: {file}\n{e.Message}");
             }
             catch (IOException e)
             {
@@ -81,14 +106,15 @@ public class SubtitleHandler : IDisposable
     /// <param name="newKey"></param>
     public void WriteLine(string oldKey, string newKey)
     {
-        foreach ((string fileName, StreamWriter writer) in _writers)
+        foreach ((string fileName, CsvWriter writer) in _writers)
         {
-            if (!_subtitles[fileName].TryGetValue(oldKey, out string? content))
+            if (!_subtitles[fileName].TryGetValue(oldKey, out string? dialogue))
             {
                 continue;
             }
-            string line = $"{newKey},{content},";
-            writer.WriteLine(line);
+            writer.WriteRecord(new Record { Key = newKey, Dialogue = dialogue!, Context = string.Empty });
+            writer.NextRecord();
+            Logger.Debug($"Written record to {fileName}: Key = {newKey}, Dialogue = {dialogue}");
         }
     }
 }

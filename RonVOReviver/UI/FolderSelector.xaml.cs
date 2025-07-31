@@ -2,7 +2,9 @@
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,16 +22,9 @@ namespace RonVOReviver.UI
     /// <summary>
     /// Interaction logic for Selector.xaml
     /// </summary>
-    public partial class FolderSelector : UserControl
+    public partial class FolderSelector : UserControl, INotifyPropertyChanged
     {
-        //public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.Register(
-        //    "IsEnabled", typeof(bool), typeof(UserControl));
-
-        //public bool IsEnabled
-        //{
-        //    get => (bool)GetValue(IsEnabledProperty);
-        //    set => SetValue(IsEnabledProperty, value);
-        //}
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public static readonly RoutedEvent SelectEvent = EventManager.RegisterRoutedEvent(
             "Select", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(FolderSelector));
@@ -40,11 +35,23 @@ namespace RonVOReviver.UI
             remove => RemoveHandler(SelectEvent, value);
         }
 
-        public string FolderPath { get; protected set; } = string.Empty;
+        public static readonly DependencyProperty FolderPathProperty = DependencyProperty.Register(
+            "FolderPath", typeof(string), typeof(VOFileList));
+
+        public string FolderPath
+        {
+            get => (string)GetValue(FolderPathProperty);
+            set
+            {
+                SetValue(FolderPathProperty, value);
+                OnPropertyChanged();
+            }
+        }
 
         public FolderSelector()
         {
             InitializeComponent();
+            FolderPath = string.Empty;
         }
 
         private void ButtonSelect_Click(object sender, RoutedEventArgs e)
@@ -56,8 +63,12 @@ namespace RonVOReviver.UI
                 return;
             }
             FolderPath = dlg.FolderName;
-            TextBoxFolderPath.Text = FolderPath;
             RaiseEvent(new RoutedEventArgs(SelectEvent));
+        }
+
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

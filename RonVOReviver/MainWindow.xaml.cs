@@ -72,8 +72,14 @@ namespace RonVOReviver
 
         public static void ShowErrorMessageBox(string text)
         {
-            MessageBox.Show(text, _messageBoxErrorCaption,MessageBoxButton.OK,
+            MessageBox.Show(text, _messageBoxErrorCaption, MessageBoxButton.OK,
                 MessageBoxImage.Error);
+        }
+
+        public static void ShowWarningMessageBox(string text)
+        {
+            MessageBox.Show(text, _messageBoxErrorCaption,MessageBoxButton.OK,
+                MessageBoxImage.Warning);
         }
 
         private void VOFileListOriginal_FolderSelect(object sender, RoutedEventArgs e)
@@ -104,13 +110,13 @@ namespace RonVOReviver
             {
                 VOFileListOriginal.FolderPath = string.Empty;
                 string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowErrorMessageBox(message);
+                ShowWarningMessageBox(message);
             }
             catch (IOException ex)
             {
                 VOFileListOriginal.FolderPath = string.Empty;
                 string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowErrorMessageBox(message);
+                ShowWarningMessageBox(message);
             }
             
             CheckCanRevive();
@@ -144,13 +150,13 @@ namespace RonVOReviver
             {
                 VOFileListModded.FolderPath = string.Empty;
                 string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowErrorMessageBox(message);
+                ShowWarningMessageBox(message);
             }
             catch (IOException ex)
             {
                 VOFileListModded.FolderPath = string.Empty;
                 string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowErrorMessageBox(message);
+                ShowWarningMessageBox(message);
             }
 
             CheckCanRevive();
@@ -172,6 +178,7 @@ namespace RonVOReviver
             ButtonRevive.IsEnabled = false;
             VOFileListDst.ClearItems();
 
+            ListBoxExtra.Items.Clear();
             List<string> FailedFiles = [];
             try
             {
@@ -195,13 +202,13 @@ namespace RonVOReviver
             {
                 VOFileListDst.FolderPath = string.Empty;
                 string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowErrorMessageBox(message);
+                ShowWarningMessageBox(message);
             }
             catch (IOException ex)
             {
                 VOFileListDst.FolderPath = string.Empty;
                 string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowErrorMessageBox(message);
+                ShowWarningMessageBox(message);
             }
 
             CheckCanRevive();
