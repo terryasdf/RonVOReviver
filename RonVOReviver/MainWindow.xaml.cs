@@ -27,7 +27,7 @@ namespace RonVOReviver
         private static readonly ResourceDictionary DictionaryZHCN = [];
         private static readonly string DefaultPakName = "pakchunk-99_RevivedVO";
         private static readonly string RegexInvalidChars =
-            $"[{String.Concat(System.IO.Path.GetInvalidPathChars())}]";
+            $"[{string.Concat(System.IO.Path.GetInvalidFileNameChars())}]";
 
         private static string _messageBoxErrorCaption = (string)Application.Current.
             Resources["MainWindow.MessageBoxError.Caption"];
