@@ -4,6 +4,7 @@ using RonVOReviver.Reviver;
 using RonVOReviver.UI;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -25,6 +26,8 @@ namespace RonVOReviver
         private static readonly ResourceDictionary DictionaryENUS = [];
         private static readonly ResourceDictionary DictionaryZHCN = [];
         private static readonly string DefaultPakName = "pakchunk-99_RevivedVO";
+        private static readonly string RegexInvalidChars =
+            $"[{String.Concat(System.IO.Path.GetInvalidPathChars())}]";
 
         private static string _messageBoxErrorCaption = (string)Application.Current.
             Resources["MainWindow.MessageBoxError.Caption"];
@@ -63,7 +66,8 @@ namespace RonVOReviver
             if (VOFileListOriginal.FolderPath.Equals(string.Empty) ||
                 VOFileListModded.FolderPath.Equals(string.Empty) ||
                 VOFileListDst.FolderPath.Equals(string.Empty) ||
-                TextBoxPakName.Text.Equals(string.Empty))
+                TextBoxPakName.Text.Equals(string.Empty) ||
+                TextBoxCharacter.Text.Equals(string.Empty))
             {
                 return;
             }
@@ -161,9 +165,18 @@ namespace RonVOReviver
 
             CheckCanRevive();
         }
+
         private void TextBoxPakName_TextChanged(object sender, TextChangedEventArgs e)
         {
+            TextBoxPakName.Text = Regex.Replace(TextBoxPakName.Text, RegexInvalidChars, string.Empty);
             _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
+            CheckCanRevive();
+        }
+
+        private void TextBoxCharacter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBoxCharacter.Text = Regex.Replace(TextBoxCharacter.Text, RegexInvalidChars, string.Empty);
+            _reviver.Character = TextBoxCharacter.Text;
             CheckCanRevive();
         }
 

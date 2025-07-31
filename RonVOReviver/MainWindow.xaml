@@ -41,7 +41,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{DynamicResource MainWindow.TextBlockCharacter.Text}" />
-                <TextBox x:Name="TextBoxCharacter" Grid.Column="1" Margin="1,1,1,1" IsReadOnly="True" IsReadOnlyCaretVisible="True"/>
+                <TextBox x:Name="TextBoxCharacter" Grid.Column="1" Margin="1,1,1,1" TextChanged="TextBoxCharacter_TextChanged"/>
             </Grid>
         </Grid>
 

@@ -20,7 +20,7 @@ public class VOReviver
     private string _destinationFolderPath = string.Empty;
 
     public int ZeroFillLength { get; set; } = 1;
-    public string Character { get; protected set; } = string.Empty;
+    public string Character { get; set; } = string.Empty;
 
     public void SetOriginalVOFolderPath(string path, Callback progressCallback,
         Callback onFormatExceptionCallback)
