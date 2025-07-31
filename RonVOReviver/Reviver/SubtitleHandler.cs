@@ -49,6 +49,10 @@ public class SubtitleHandler : IDisposable
                 while ((row = sr.ReadLine()) is not null)
                 {
                     string[] cells = row.Trim().Split(',');
+                    if (cells.Length < 2)
+                    {
+                        continue;
+                    }
                     dict[cells[0]] = cells[1];
                 }
                 _writers[fileName] = new StreamWriter($"{outputFolderPath}\\{fileName}");
