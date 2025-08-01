@@ -37,6 +37,8 @@ public class VOReviver
 
     public void SetDestionationFolderPath(string path) => _destinationFolderPath = path;
 
+    public void PakVOFiles() => Packer.Pack(_destinationFolderPath);
+
     public void CopyVOFiles(out List<string> missingVOTypes,
         Callback extraVOTypeFileCallback, Callback progressCallback,
         Callback onIOExceptionCallback)
