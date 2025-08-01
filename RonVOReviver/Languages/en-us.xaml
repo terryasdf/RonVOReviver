@@ -6,7 +6,7 @@
     <s:String x:Key="MainWindow.VOFileListModded.Title">Your Modded Character's VO Folder (e.g. SWATJudge):</s:String>
     <s:String x:Key="MainWindow.TextBlockPakName.Text">Pak name: </s:String>
     <s:String x:Key="MainWindow.TextBlockCharacter.Text">Character: </s:String>
-    <s:String x:Key="MainWindow.TextBlockZFill.Text">Zero pad indices to length</s:String>
+    <s:String x:Key="MainWindow.TextBlockZFill.Text">Zero padding length</s:String>
     <s:String x:Key="MainWindow.VOFileListNew.Title">Folder to save generated .pak:</s:String>
     <s:String x:Key="MainWindow.ButtonRevive.Content">Revive!</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.LoadedOriginal.Text">Loaded vanilla VO.</s:String>

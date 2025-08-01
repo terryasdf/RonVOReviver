@@ -26,7 +26,7 @@ public partial class MainWindow : Window
     private static readonly ResourceDictionary DictionaryENUS = [];
     private static readonly ResourceDictionary DictionaryZHCN = [];
     private const string DefaultPakName = "pakchunk99-RevivedVO";
-    private const string ZFillPreviewVOType = "DemoVO";
+    private const string ZFillPreviewVOType = "PreviewVO";
     private const int ZFillPreviewIndex1 = 1;
     private const int ZFillPreviewIndex2 = 12;
     private static readonly string RegexInvalidChars =
@@ -52,7 +52,7 @@ public partial class MainWindow : Window
         DictionaryZHCN.Source = new Uri("Languages/zh-cn.xaml", UriKind.Relative);
     }
 
-    private void ResetDynamicResourcesMessageTexts()
+    private static void ResetDynamicResourcesMessageTexts()
     {
         _messageBoxErrorCaption = (string)Application.Current.
             Resources["MainWindow.MessageBoxError.Caption"];
@@ -93,7 +93,7 @@ public partial class MainWindow : Window
 
     public static void ShowWarningMessageBox(string text)
     {
-        MessageBox.Show(text, _messageBoxErrorCaption,MessageBoxButton.OK,
+        MessageBox.Show(text, _messageBoxErrorCaption, MessageBoxButton.OK,
             MessageBoxImage.Warning);
     }
 
@@ -117,6 +117,7 @@ public partial class MainWindow : Window
             }
 
             VOFileListOriginal.IsEnabled = true;
+            NumericUpDownZFill.Value = _reviver.ZeroFillLength;
             TextBoxCharacter.Text = System.IO.Path.GetFileName(VOFileListOriginal.FolderPath);
             TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
                 "MainWindow.TextBlockProgess.LoadedOriginal.Text");

@@ -18,17 +18,17 @@ public class VOManager
 
     public string FolderPath { get; protected set; } = string.Empty;
     public List<string> Files { get; } = [];
+    public int ZeroFillLength { get; set; } = 4;
 
     /// <summary>
     /// Dummy constructor.
     /// </summary>
     public VOManager() { }
 
-    public static string GetVoType(string file, out int index)
+    public static string GetVOType(string file, out string strIndex)
     {
         string[] components = Path.GetFileName(file).Split('_');
-        string strIndex = components.Last().Split('.')[0];
-        index = int.Parse(strIndex);
+        strIndex = components.Last().Split('.')[0];
         Array.Resize(ref components, components.Length - 1);
         return string.Concat(components);
     }
@@ -67,7 +67,7 @@ public class VOManager
             filesArray[i] = filesArray[i].ToLower();
             try
             {
-                string voType = GetVoType(filesArray[i], out int id);
+                string voType = GetVOType(filesArray[i], out string id);
                 Logger.Debug($"Found .ogg under folder: {voType}, id={id}");
 
                 if (!_voIndicesMap.TryGetValue(voType, out List<int>? indices))
@@ -76,7 +76,11 @@ public class VOManager
                     _voIndicesMap[voType] = indices;
                 }
                 Files.Add(filesArray[i]);
-                indices.Add(id);
+                indices.Add(int.Parse(id));
+                if (ZeroFillLength > id.Length)
+                {
+                    ZeroFillLength = id.Length;
+                }
                 progressCallback(filesArray[i]);
             }
             catch (FormatException e)

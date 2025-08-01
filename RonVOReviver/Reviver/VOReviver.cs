@@ -28,6 +28,7 @@ public class VOReviver
         Callback onFormatExceptionCallback)
     {
         _originalVOManager = new(path, progressCallback, onFormatExceptionCallback);
+        ZeroFillLength = _originalVOManager.ZeroFillLength;
         Character = Path.GetFileName(path);
     }
 
@@ -64,9 +65,9 @@ public class VOReviver
         for (int i = 0; i < numModdedVO; i = nextTypeCur)
         {
             // Find all files of one voType
-            string voType = VOManager.GetVoType(moddedVOFiles[i], out int _);
+            string voType = VOManager.GetVOType(moddedVOFiles[i], out string _);
             while (nextTypeCur < numModdedVO &&
-                VOManager.GetVoType(moddedVOFiles[nextTypeCur], out int _).Equals(voType))
+                VOManager.GetVOType(moddedVOFiles[nextTypeCur], out string _).Equals(voType))
             {
                 ++nextTypeCur;
             }
