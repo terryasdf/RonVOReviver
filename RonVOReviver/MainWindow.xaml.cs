@@ -226,30 +226,50 @@ public partial class MainWindow : Window
                 },
                 (path) => FailedFiles.Add(path));
 
-            ListBoxMissing.ItemsSource = missingVOTypes;
-            if (FailedFiles.Count > 0)
-            {
-                string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
-                MessageBox.Show(message, _messageBoxErrorCaption);
+                ListBoxMissing.ItemsSource = missingVOTypes;
+                if (FailedFiles.Count > 0)
+                {
+                    string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
+                    MessageBox.Show(message, _messageBoxErrorCaption);
+                }
+
+                _reviver.PakVOFiles();
             }
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            VOFileListDst.FolderPath = string.Empty;
-            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowWarningMessageBox(message);
-        }
-        catch (IOException ex)
-        {
-            VOFileListDst.FolderPath = string.Empty;
-            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowWarningMessageBox(message);
-        }
+            catch (UnauthorizedAccessException ex)
+            {
+                VOFileListDst.FolderPath = string.Empty;
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowWarningMessageBox(message);
+            }
+            catch (IOException ex)
+            {
+                VOFileListDst.FolderPath = string.Empty;
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowWarningMessageBox(message);
+            }
 
         CheckCanRevive();
     }
 
-    #region languages
+        private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = !VOFileListDst.FolderPath.Equals(string.Empty);
+        }
+
+        private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            try
+            {
+                _reviver.PakVOFiles();
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowErrorMessageBox(message);
+            }
+        }
+
+        #region languages
 
     private void ButtonENUS_Checked(object sender, RoutedEventArgs e)
     {
