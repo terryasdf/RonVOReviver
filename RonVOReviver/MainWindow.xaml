@@ -46,8 +46,16 @@
         </Grid>
 
         <ui:VOFileList x:Name="VOFileListDst" Title="{DynamicResource MainWindow.VOFileListNew.Title}" Select="VOFileListDst_FolderSelect" Grid.Row="3"/>
-        
-        <Button x:Name="ButtonRevive" Grid.Row="4" Content="{DynamicResource MainWindow.ButtonRevive.Content}" HorizontalAlignment="Center" Margin="1,1,1,1" FontSize="16" IsEnabled="False" Click="ButtonRevive_Click"/>
+
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="ButtonRevive" Content="{DynamicResource MainWindow.ButtonRevive.Content}" HorizontalAlignment="Center" Margin="1,1,1,1" FontSize="16" IsEnabled="False" Click="ButtonRevive_Click" Grid.Column="1"/>
+            <Button x:Name="ButtonPak" Content="{DynamicResource MainWindow.ButtonPak.Content}" HorizontalAlignment="Left" Margin="1,1,1,1" IsEnabled="False" Click="ButtonRevive_Click" Grid.Column="2"/>
+        </Grid>
         
         <Grid Grid.Row="5" Margin="5,5,5,5">
             <Grid.ColumnDefinitions>

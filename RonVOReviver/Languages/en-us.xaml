@@ -8,6 +8,7 @@
     <s:String x:Key="MainWindow.TextBlockCharacter.Text">Character: </s:String>
     <s:String x:Key="MainWindow.VOFileListNew.Title">Folder to save generated .pak:</s:String>
     <s:String x:Key="MainWindow.ButtonRevive.Content">Revive!</s:String>
+    <s:String x:Key="MainWindow.ButtonPak.Content">Pak Only</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.LoadedOriginal.Text">Loaded vanilla VO.</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.LoadedModded.Text">Loaded modded VO.</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.CanRevive.Text">You can now start reviving.</s:String>

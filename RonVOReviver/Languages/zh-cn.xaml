@@ -8,6 +8,7 @@
     <s:String x:Key="MainWindow.TextBlockCharacter.Text">替换角色: </s:String>
     <s:String x:Key="MainWindow.VOFileListNew.Title">.pak打包存放处</s:String>
     <s:String x:Key="MainWindow.ButtonRevive.Content">一键复活!</s:String>
+    <s:String x:Key="MainWindow.ButtonPak.Content">仅打包.pak</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.LoadedOriginal.Text">已加载原版语音</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.LoadedModded.Text">已加载Mod语音</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.CanRevive.Text">可启动一键复活</s:String>
