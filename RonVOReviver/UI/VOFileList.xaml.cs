@@ -23,10 +23,8 @@ namespace RonVOReviver.UI
     /// <summary>
     /// Interaction logic for VOFileList.xaml
     /// </summary>
-    public partial class VOFileList : UserControl, INotifyPropertyChanged
+    public partial class VOFileList : UserControl
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
             "Title", typeof(string), typeof(VOFileList));
 
@@ -73,11 +71,6 @@ namespace RonVOReviver.UI
         {
             FolderPath = FolderSelector.FolderPath;
             RaiseEvent(new RoutedEventArgs(SelectEvent));
-        }
-
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }
