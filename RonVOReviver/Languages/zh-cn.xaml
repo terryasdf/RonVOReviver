@@ -6,6 +6,7 @@
     <s:String x:Key="MainWindow.VOFileListModded.Title">Mod角色语音文件夹 (如: SWATJudge)</s:String>
     <s:String x:Key="MainWindow.TextBlockPakName.Text">打包名称: </s:String>
     <s:String x:Key="MainWindow.TextBlockCharacter.Text">替换角色: </s:String>
+    <s:String x:Key="MainWindow.TextBlockZFill.Text">序号前置零补齐至长度</s:String>
     <s:String x:Key="MainWindow.VOFileListNew.Title">.pak打包存放处</s:String>
     <s:String x:Key="MainWindow.ButtonRevive.Content">一键复活!</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.LoadedOriginal.Text">已加载原版语音</s:String>

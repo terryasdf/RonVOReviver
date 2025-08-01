@@ -22,6 +22,8 @@ public class VOReviver
     public int ZeroFillLength { get; set; } = 1;
     public string Character { get; set; } = string.Empty;
 
+    public string ZeroFill(int x) => x.ToString($"D{ZeroFillLength}");
+
     public void SetOriginalVOFolderPath(string path, Callback progressCallback,
         Callback onFormatExceptionCallback)
     {
@@ -84,7 +86,7 @@ public class VOReviver
                 for (int j = i; j < nextTypeCur; ++j)
                 {
                     string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
-                    string newKey = $"{voType}_{index++.ToString($"D{ZeroFillLength}")}";
+                    string newKey = $"{voType}_{ZeroFill(index++)}";
                     string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
                     try
                     {

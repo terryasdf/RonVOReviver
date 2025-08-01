@@ -3,9 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:self="clr-namespace:RonVOReviver"
         xmlns:ui="clr-namespace:RonVOReviver.UI"
+        xmlns:n="clr-namespace:NumericUpDownLib;assembly=NumericUpDownLib"
         mc:Ignorable="d"
         Title="VO Reviver" Height="450" Width="800">
+    <Window.CommandBindings>
+        <CommandBinding Command="self:NumericUpDownZFillCommands.Update" CanExecute="ZFillUpdateCommand_CanExecute" Executed="ZFillUpdateCommand_Executed"/>
+    </Window.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -16,7 +21,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        
+
         <ui:VOFileList x:Name="VOFileListOriginal" Title="{DynamicResource MainWindow.VOFileListOriginal.Title}" Select="VOFileListOriginal_FolderSelect" Grid.Row="0"/>
         <ui:VOFileList x:Name="VOFileListModded" Title="{DynamicResource MainWindow.VOFileListModded.Title}" Select="VOFileListModded_FolderSelect" Grid.Row="1"/>
 
@@ -24,6 +29,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
             <Grid Margin="0,0,5,0">
                 <Grid.ColumnDefinitions>
@@ -31,24 +37,41 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{DynamicResource MainWindow.TextBlockPakName.Text}" />
+                <TextBlock Text="{DynamicResource MainWindow.TextBlockPakName.Text}" VerticalAlignment="Center" />
                 <TextBox x:Name="TextBoxPakName" Grid.Column="1" Margin="1,1,1,1" TextChanged="TextBoxPakName_TextChanged"/>
-                <TextBlock Text=".pak" Grid.Column="2" />
+                <TextBlock Text=".pak" Grid.Column="2" VerticalAlignment="Center" />
             </Grid>
             <Grid Grid.Column="1" Margin="5,0,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{DynamicResource MainWindow.TextBlockCharacter.Text}" />
+                <TextBlock Text="{DynamicResource MainWindow.TextBlockCharacter.Text}" VerticalAlignment="Center" />
                 <TextBox x:Name="TextBoxCharacter" Grid.Column="1" Margin="1,1,1,1" TextChanged="TextBoxCharacter_TextChanged"/>
+            </Grid>
+            <Grid Grid.Column="2" Margin="5,0,5,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{DynamicResource MainWindow.TextBlockZFill.Text}" VerticalAlignment="Center"/>
+                <n:NumericUpDown x:Name="NumericUpDownZFill" Grid.Column="1" Command="self:NumericUpDownZFillCommands.Update" MinValue="1" MaxValue="4" IsReadOnly="True" Margin="2,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock x:Name="TextBlockZFillPreview1"/>
+                    <TextBlock x:Name="TextBlockZFillPreview2" Grid.Row="1"/>
+                </Grid>
             </Grid>
         </Grid>
 
         <ui:VOFileList x:Name="VOFileListDst" Title="{DynamicResource MainWindow.VOFileListNew.Title}" Select="VOFileListDst_FolderSelect" Grid.Row="3"/>
-        
+
         <Button x:Name="ButtonRevive" Grid.Row="4" Content="{DynamicResource MainWindow.ButtonRevive.Content}" HorizontalAlignment="Center" Margin="1,1,1,1" FontSize="16" IsEnabled="False" Click="ButtonRevive_Click"/>
-        
+
         <Grid Grid.Row="5" Margin="5,5,5,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
