@@ -227,6 +227,24 @@ namespace RonVOReviver
             CheckCanRevive();
         }
 
+        private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = !VOFileListDst.FolderPath.Equals(string.Empty);
+        }
+
+        private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            try
+            {
+                _reviver.PakVOFiles();
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+                ShowErrorMessageBox(message);
+            }
+        }
+
         #region languages
 
         private void ButtonENUS_Checked(object sender, RoutedEventArgs e)

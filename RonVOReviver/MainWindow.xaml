@@ -6,6 +6,9 @@
         xmlns:ui="clr-namespace:RonVOReviver.UI"
         mc:Ignorable="d"
         Title="VO Reviver" Height="450" Width="800">
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Save" Executed="NewCommand_Executed" CanExecute="NewCommand_CanExecute"/>
+    </Window.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -54,7 +57,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Button x:Name="ButtonRevive" Content="{DynamicResource MainWindow.ButtonRevive.Content}" HorizontalAlignment="Center" Margin="1,1,1,1" FontSize="16" IsEnabled="False" Click="ButtonRevive_Click" Grid.Column="1"/>
-            <Button x:Name="ButtonPak" Content="{DynamicResource MainWindow.ButtonPak.Content}" HorizontalAlignment="Left" Margin="1,1,1,1" IsEnabled="False" Click="ButtonRevive_Click" Grid.Column="2"/>
+            <Button x:Name="ButtonPak" Command="ApplicationCommands.Save" Content="{DynamicResource MainWindow.ButtonPak.Content}" HorizontalAlignment="Left" Margin="1,1,1,1"  Grid.Column="2"/>
         </Grid>
         
         <Grid Grid.Row="5" Margin="5,5,5,5">

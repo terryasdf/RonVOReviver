@@ -13,23 +13,28 @@ public static class Packer
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private const string PakExecutable = "ron_pak.bat";
-    private const string PakDirectory = "paking";
+    private const string PakDirectory = ".\\paking";
+    private static readonly string PakExecutable = Path.GetFullPath($"{PakDirectory}\\ron_pak.bat");
 
     public static void Pack(string pakPath)
     {
         if (!Directory.Exists(pakPath))
         {
+            Logger.Error($"The pak folder does not exist: {pakPath}");
             throw new DirectoryNotFoundException($"The folder does not exist:\n{pakPath}");
         }
 
-        ProcessStartInfo processInfo = new(PakExecutable, pakPath)
-        {
-            UseShellExecute = false,
-            WorkingDirectory = PakDirectory,
-        };
+        ProcessStartInfo processInfo = new(PakExecutable, pakPath);
 
-        Process? p = Process.Start(processInfo);
-        p?.WaitForExit();
+        Logger.Info($"Starting paking process: {pakPath}");
+
+        using Process? p = Process.Start(processInfo);
+        if (p == null)
+        {
+            Logger.Info($"Paking process not started");
+            return;
+        }
+        p.WaitForExit();
+        Logger.Info($"Paking process finished");
     }
 }
