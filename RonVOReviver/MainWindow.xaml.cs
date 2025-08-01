@@ -71,20 +71,6 @@ public partial class MainWindow : Window
         TextBlockZFillPreview2.Text = $"{ZFillPreviewVOType}_{_reviver.ZeroFill(ZFillPreviewIndex2)}.ogg";
     }
 
-    private void CheckCanRevive()
-    {
-        ButtonRevive.IsEnabled = false;
-        if (VOFileListOriginal.FolderPath.Equals(string.Empty) ||
-            VOFileListModded.FolderPath.Equals(string.Empty) ||
-            VOFileListDst.FolderPath.Equals(string.Empty) ||
-            TextBoxPakName.Text.Equals(string.Empty) ||
-            TextBoxCharacter.Text.Equals(string.Empty))
-        {
-            return;
-        }
-        ButtonRevive.IsEnabled = true;
-    }
-
     public static void ShowErrorMessageBox(string text)
     {
         MessageBox.Show(text, _messageBoxErrorCaption, MessageBoxButton.OK,
@@ -134,8 +120,6 @@ public partial class MainWindow : Window
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
             ShowWarningMessageBox(message);
         }
-        
-        CheckCanRevive();
     }
 
     private void VOFileListModded_FolderSelect(object sender, RoutedEventArgs e)
@@ -174,28 +158,23 @@ public partial class MainWindow : Window
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
             ShowWarningMessageBox(message);
         }
-
-        CheckCanRevive();
     }
 
     private void TextBoxPakName_TextChanged(object sender, TextChangedEventArgs e)
     {
         TextBoxPakName.Text = Regex.Replace(TextBoxPakName.Text, RegexInvalidChars, string.Empty);
         _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
-        CheckCanRevive();
     }
 
     private void TextBoxCharacter_TextChanged(object sender, TextChangedEventArgs e)
     {
         TextBoxCharacter.Text = Regex.Replace(TextBoxCharacter.Text, RegexInvalidChars, string.Empty);
         _reviver.Character = TextBoxCharacter.Text;
-        CheckCanRevive();
     }
 
     private void VOFileListDst_FolderSelect(object sender, RoutedEventArgs e)
     {
         _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
-        CheckCanRevive();
     }
 
     private void ZFillUpdateCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -208,9 +187,22 @@ public partial class MainWindow : Window
         UpdateZeroFill();
     }
 
-    private void ButtonRevive_Click(object sender, RoutedEventArgs e)
+    private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        ButtonRevive.IsEnabled = false;
+        if (VOFileListOriginal.FolderPath.Equals(string.Empty) ||
+            VOFileListModded.FolderPath.Equals(string.Empty) ||
+            VOFileListDst.FolderPath.Equals(string.Empty) ||
+            TextBoxPakName.Text.Equals(string.Empty) ||
+            TextBoxCharacter.Text.Equals(string.Empty))
+        {
+            e.CanExecute = false;
+            return;
+        }
+        e.CanExecute = true;
+    }
+
+    private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
         VOFileListDst.ClearItems();
 
         ListBoxExtra.Items.Clear();
@@ -226,50 +218,48 @@ public partial class MainWindow : Window
                 },
                 (path) => FailedFiles.Add(path));
 
-                ListBoxMissing.ItemsSource = missingVOTypes;
-                if (FailedFiles.Count > 0)
-                {
-                    string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
-                    MessageBox.Show(message, _messageBoxErrorCaption);
-                }
-
-                _reviver.PakVOFiles();
-            }
-            catch (UnauthorizedAccessException ex)
+            ListBoxMissing.ItemsSource = missingVOTypes;
+            if (FailedFiles.Count > 0)
             {
-                VOFileListDst.FolderPath = string.Empty;
-                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowWarningMessageBox(message);
-            }
-            catch (IOException ex)
-            {
-                VOFileListDst.FolderPath = string.Empty;
-                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowWarningMessageBox(message);
+                string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
+                MessageBox.Show(message, _messageBoxErrorCaption);
             }
 
-        CheckCanRevive();
+            _reviver.PakVOFiles();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            VOFileListDst.FolderPath = string.Empty;
+            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+            ShowWarningMessageBox(message);
+        }
+        catch (IOException ex)
+        {
+            VOFileListDst.FolderPath = string.Empty;
+            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+            ShowWarningMessageBox(message);
+        }
     }
 
-        private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = !VOFileListDst.FolderPath.Equals(string.Empty);
-        }
+    private void SaveCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+    {
+        e.CanExecute = !VOFileListDst.FolderPath.Equals(string.Empty);
+    }
 
-        private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    private void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
+        try
         {
-            try
-            {
-                _reviver.PakVOFiles();
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-                string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-                ShowErrorMessageBox(message);
-            }
+            _reviver.PakVOFiles();
         }
+        catch (DirectoryNotFoundException ex)
+        {
+            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+            ShowErrorMessageBox(message);
+        }
+    }
 
-        #region languages
+    #region languages
 
     private void ButtonENUS_Checked(object sender, RoutedEventArgs e)
     {

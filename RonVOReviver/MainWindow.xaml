@@ -9,7 +9,8 @@
         mc:Ignorable="d"
         Title="VO Reviver" Height="450" Width="800">
     <Window.CommandBindings>
-        <CommandBinding Command="ApplicationCommands.Save" Executed="NewCommand_Executed" CanExecute="NewCommand_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.New" Executed="NewCommand_Executed" CanExecute="NewCommand_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Save" Executed="SaveCommand_Executed" CanExecute="SaveCommand_CanExecute"/>
         <CommandBinding Command="self:NumericUpDownZFillCommands.Update" CanExecute="ZFillUpdateCommand_CanExecute" Executed="ZFillUpdateCommand_Executed"/>
     </Window.CommandBindings>
     <Grid>
@@ -77,7 +78,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="ButtonRevive" Content="{DynamicResource MainWindow.ButtonRevive.Content}" HorizontalAlignment="Center" Margin="1,1,1,1" FontSize="16" IsEnabled="False" Click="ButtonRevive_Click" Grid.Column="1"/>
+            <Button x:Name="ButtonRevive" Command="ApplicationCommands.New" Content="{DynamicResource MainWindow.ButtonRevive.Content}" HorizontalAlignment="Center" Margin="1,1,1,1" FontSize="16" Grid.Column="1"/>
             <Button x:Name="ButtonPak" Command="ApplicationCommands.Save" Content="{DynamicResource MainWindow.ButtonPak.Content}" HorizontalAlignment="Left" Margin="1,1,1,1"  Grid.Column="2"/>
         </Grid>
         
