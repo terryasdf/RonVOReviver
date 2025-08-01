@@ -16,6 +16,12 @@ public static class Packer
     private const string PakDirectory = ".\\paking";
     private static readonly string PakExecutable = Path.GetFullPath($"{PakDirectory}\\ron_pak.bat");
 
+    private static void OpenExplorer(string path)
+    {
+        ProcessStartInfo? processInfo = new("explorer", path);
+        Process.Start(processInfo);
+    }
+
     public static void Pack(string pakPath)
     {
         if (!Directory.Exists(pakPath))
@@ -36,5 +42,7 @@ public static class Packer
         }
         p.WaitForExit();
         Logger.Info($"Paking process finished");
+
+        OpenExplorer($"{pakPath}\\..");
     }
 }

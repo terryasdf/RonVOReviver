@@ -210,6 +210,8 @@ namespace RonVOReviver
                     string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
                     MessageBox.Show(message, _messageBoxErrorCaption);
                 }
+
+                _reviver.PakVOFiles();
             }
             catch (UnauthorizedAccessException ex)
             {
