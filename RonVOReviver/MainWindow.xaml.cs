@@ -41,6 +41,7 @@ public partial class MainWindow : Window
         UpdateZeroFill();
         DictionaryENUS.Source = new Uri("Languages/en-us.xaml", UriKind.Relative);
         DictionaryZHCN.Source = new Uri("Languages/zh-cn.xaml", UriKind.Relative);
+        ResetDynamicResourcesMessageTexts();
     }
 
     private static void ResetDynamicResourcesMessageTexts()
@@ -90,7 +91,7 @@ public partial class MainWindow : Window
             if (skippedVOFiles.Count > 0)
             {
                 string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
-                MessageBox.Show(message);
+                ShowWarningMessageBox(message);
             }
 
             VOFileListOriginal.IsEnabled = true;
@@ -103,13 +104,13 @@ public partial class MainWindow : Window
         {
             VOFileListOriginal.FolderPath = string.Empty;
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowWarningMessageBox(message);
+            ShowErrorMessageBox(message);
         }
         catch (IOException ex)
         {
             VOFileListOriginal.FolderPath = string.Empty;
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowWarningMessageBox(message);
+            ShowErrorMessageBox(message);
         }
     }
 
@@ -130,7 +131,7 @@ public partial class MainWindow : Window
             if (skippedVOFiles.Count > 0)
             {
                 string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
-                MessageBox.Show(message, _messageBoxErrorCaption);
+                ShowWarningMessageBox(message);
             }
 
             VOFileListModded.IsEnabled = true;
@@ -141,13 +142,13 @@ public partial class MainWindow : Window
         {
             VOFileListModded.FolderPath = string.Empty;
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowWarningMessageBox(message);
+            ShowErrorMessageBox(message);
         }
         catch (IOException ex)
         {
             VOFileListModded.FolderPath = string.Empty;
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowWarningMessageBox(message);
+            ShowErrorMessageBox(message);
         }
     }
 
@@ -213,7 +214,7 @@ public partial class MainWindow : Window
             if (FailedFiles.Count > 0)
             {
                 string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
-                MessageBox.Show(message, _messageBoxErrorCaption);
+                ShowWarningMessageBox(message);
             }
 
             _reviver.PakVOFiles();
@@ -222,13 +223,13 @@ public partial class MainWindow : Window
         {
             VOFileListDst.FolderPath = string.Empty;
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowWarningMessageBox(message);
+            ShowErrorMessageBox(message);
         }
         catch (IOException ex)
         {
             VOFileListDst.FolderPath = string.Empty;
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowWarningMessageBox(message);
+            ShowErrorMessageBox(message);
         }
     }
 
