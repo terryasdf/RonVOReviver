@@ -25,7 +25,7 @@ public class VOManager
         string[] components = Path.GetFileName(file).Split('_');
         strIndex = components.Last().Split('.')[0];
         Array.Resize(ref components, components.Length - 1);
-        return string.Concat(components);
+        return string.Join("_", components);
     }
 
     public Dictionary<string, List<int>>.KeyCollection GetVOTypes() => _voIndicesMap.Keys;
