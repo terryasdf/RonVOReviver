@@ -13,6 +13,7 @@ namespace RonVOReviver
             string message = $"An error has occurred:\n{e.Exception.Message}";
             RonVOReviver.MainWindow.ShowErrorMessageBox(message);
             e.Handled = true;
+            Current.Shutdown(e.GetHashCode());
         }
     }
 }
