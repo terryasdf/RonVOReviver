@@ -9,9 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\RON_VO_VOR_256x256.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Dirkster.NumericUpDownLib" Version="3.4.0" />
     <PackageReference Include="NLog" Version="6.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\RON_VO_VOR_256x256.ico" />
   </ItemGroup>
 
   <ItemGroup>

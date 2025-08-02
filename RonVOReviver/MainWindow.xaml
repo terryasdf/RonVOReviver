@@ -7,7 +7,8 @@
         xmlns:ui="clr-namespace:RonVOReviver.UI"
         xmlns:n="clr-namespace:NumericUpDownLib;assembly=NumericUpDownLib"
         mc:Ignorable="d"
-        Title="VO Reviver" Height="450" Width="800">
+        Title="VO Reviver" Height="450" Width="800"
+        Icon="/Assets/RON_VO_VOR_256x256.ico">
     <Window.CommandBindings>
         <CommandBinding Command="ApplicationCommands.New" Executed="NewCommand_Executed" CanExecute="NewCommand_CanExecute"/>
         <CommandBinding Command="ApplicationCommands.Save" Executed="SaveCommand_Executed" CanExecute="SaveCommand_CanExecute"/>
