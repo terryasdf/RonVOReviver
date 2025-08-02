@@ -1,24 +1,15 @@
 ﻿using CsvHelper;
 using NLog;
-using System;
-using System.Collections.Generic;
-using System.Formats.Asn1;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RonVOReviver.Reviver;
 
 public class SubtitleHandler : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    // TODO: Check header content
-    private static readonly string HeaderContent = "Key,Dialogue,Context";
 
     private readonly Dictionary<string, Dictionary<string, string>> _subtitles = [];
-
     private Dictionary<string, CsvWriter> _writers = [];
 
     public class Record
@@ -83,8 +74,7 @@ public class SubtitleHandler : IDisposable
             catch (UnauthorizedAccessException e)
             {
                 onIOExceptionCallback(file);
-                Logger.Error($"Unauthorized access to write new subtitle file: {
-                    outputFolderPath}\\{fileName}\n{e.Message}");
+                Logger.Error($"Unauthorized access to write new subtitle file: {outputFolderPath}\\{fileName}\n{e.Message}");
             }
             catch (FileFormatException e)
             {
