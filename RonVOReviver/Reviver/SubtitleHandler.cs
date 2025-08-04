@@ -10,13 +10,13 @@ public class SubtitleHandler : IDisposable
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly Dictionary<string, Dictionary<string, string>> _subtitles = [];
-    private Dictionary<string, CsvWriter> _writers = [];
+    private readonly Dictionary<string, CsvWriter> _writers = [];
 
-    public class Record
+    public struct Record
     {
-        public required string Key { get; set; }
-        public required string Dialogue { get; set; }
-        public required string Context { get; set; }
+        public string Key { get; set; }
+        public string Dialogue { get; set; }
+        public string Context { get; set; }
     }
 
     /// <summary>
@@ -33,6 +33,11 @@ public class SubtitleHandler : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Loads all old subtitles into dictionary and opens a <see cref="CsvWriter"/> for each language.
+    /// </summary>
+    /// <param name="oldSubtitleFolderPath">The folder path for old files</param>
+    /// <param name="outputFolderPath">The folder path for generated files</param>
     public SubtitleHandler(string oldSubtitleFolderPath, string outputFolderPath,
         Callback onIOExceptionCallback)
     {
@@ -90,10 +95,10 @@ public class SubtitleHandler : IDisposable
     }
 
     /// <summary>
-    /// 
+    /// Writes a line to new subtitle files for each language.
     /// </summary>
-    /// <param name="oldKey"></param>
-    /// <param name="newKey"></param>
+    /// <param name="oldKey">The "Key" attribute of old files</param>
+    /// <param name="newKey">The "Key" attribute for the new files</param>
     public void WriteLine(string oldKey, string newKey)
     {
         foreach ((string fileName, CsvWriter writer) in _writers)
@@ -102,7 +107,7 @@ public class SubtitleHandler : IDisposable
             {
                 continue;
             }
-            writer.WriteRecord(new Record { Key = newKey, Dialogue = dialogue!, Context = string.Empty });
+            writer.WriteRecord(new Record { Key = newKey, Dialogue = dialogue! });
             writer.NextRecord();
             Logger.Debug($"Written record to {fileName}: Key = {newKey}, Dialogue = {dialogue}");
         }
