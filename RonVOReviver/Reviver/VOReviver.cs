@@ -45,20 +45,28 @@ public class VOReviver
 
         // Clear destination directory
         string newVOFolderPath = $"{_destinationFolderPath}\\{InPakVOPath}\\{Character}";
-        if (Directory.Exists(_destinationFolderPath))
-        {
-            Directory.Delete(_destinationFolderPath, true);
-            Logger.Debug($"Deleted folder: {_destinationFolderPath}");
-        }
+        string tempFolderPath = $"{_destinationFolderPath}\\temp";
+        FileHandler.ClearDirectory(_destinationFolderPath);
         Directory.CreateDirectory(newVOFolderPath);
-
-        int nextTypeCur = 0;
+        Directory.CreateDirectory(tempFolderPath);
+        
         int numModdedVO = _moddedVOManager.Files.Count;
         string[] moddedVOFiles = [.. _moddedVOManager.Files];
 
+        // Convert audio format and save to a temp folder if necessary
+        if (!_moddedVOManager.IsOgg)
+        {
+            for (int i = 0; i < numModdedVO; ++i)
+            {
+                string tempFile = $"{tempFolderPath}\\{Path.GetFileNameWithoutExtension(moddedVOFiles[i])}.ogg";
+                AudioConverter.ConvertToOgg(moddedVOFiles[i], tempFile);
+                moddedVOFiles[i] = tempFile;
+            }
+        }
+
+        int nextTypeCur = 0;
         using SubtitleHandler subtitleHandler = new(_moddedVOManager.FolderPath,
             newVOFolderPath, onIOExceptionCallback);
-
         for (int i = 0; i < numModdedVO; i = nextTypeCur)
         {
             // Find all files of one voType
@@ -88,17 +96,8 @@ public class VOReviver
                     string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
                     try
                     {
-                        if (_moddedVOManager.IsOgg)
-                        {
-                            File.Copy(moddedVOFiles[j], dstFile);
-                            Logger.Debug($"Copied \"{moddedVOFiles[j]}\" as \"{dstFile}\"");
-                        }
-                        else
-                        {
-                            AudioConverter.ConvertToOgg(moddedVOFiles[j], dstFile);
-                            Logger.Debug($"Converted \"{moddedVOFiles[j]}\" to \"{dstFile}\"");
-                        }
-
+                        File.Copy(moddedVOFiles[j], dstFile);
+                        Logger.Debug($"Copied \"{moddedVOFiles[j]}\" as \"{dstFile}\"");
                         if (numOriginal == 0)
                         {
                             extraVOTypeFileCallback(moddedVOFiles[j]);
@@ -121,6 +120,8 @@ public class VOReviver
                 }
             }
         }
+
+        FileHandler.ClearDirectory(tempFolderPath);
 
         foreach (string voType in _originalVOManager.GetVOTypes())
         {
