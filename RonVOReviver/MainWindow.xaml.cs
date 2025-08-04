@@ -21,7 +21,7 @@ public partial class MainWindow : Window
     private const int ZFillPreviewIndex1 = 1;
     private const int ZFillPreviewIndex2 = 12;
     private static readonly string RegexInvalidChars =
-        $"[{string.Concat(System.IO.Path.GetInvalidFileNameChars())}]";
+        $"[{string.Concat(Path.GetInvalidFileNameChars())} ]";
 
     private static string _messageBoxErrorCaption = string.Empty;
     private static string _messageBoxFormatExceptionText = string.Empty;

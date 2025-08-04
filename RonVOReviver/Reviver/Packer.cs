@@ -13,7 +13,7 @@ public static class Packer
 
     private static void OpenExplorer(string path)
     {
-        ProcessStartInfo? processInfo = new("explorer", path);
+        ProcessStartInfo? processInfo = new("explorer", $"\"{path}\"");
         Process.Start(processInfo);
     }
 
@@ -25,7 +25,7 @@ public static class Packer
             throw new DirectoryNotFoundException($"The folder does not exist:\n{pakPath}");
         }
 
-        ProcessStartInfo processInfo = new(PakExecutable, pakPath);
+        ProcessStartInfo processInfo = new(PakExecutable, $"\"{pakPath}\"");
 
         Logger.Info($"Starting paking process: {pakPath}");
 
