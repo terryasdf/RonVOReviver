@@ -88,8 +88,17 @@ public class VOReviver
                     string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
                     try
                     {
-                        File.Copy(moddedVOFiles[j], dstFile);
-                        Logger.Debug($"Copied \"{moddedVOFiles[j]}\" as \"{dstFile}\"");
+                        if (_moddedVOManager.IsOgg)
+                        {
+                            File.Copy(moddedVOFiles[j], dstFile);
+                            Logger.Debug($"Copied \"{moddedVOFiles[j]}\" as \"{dstFile}\"");
+                        }
+                        else
+                        {
+                            AudioConverter.ConvertToOgg(moddedVOFiles[j], dstFile);
+                            Logger.Debug($"Converted \"{moddedVOFiles[j]}\" to \"{dstFile}\"");
+                        }
+
                         if (numOriginal == 0)
                         {
                             extraVOTypeFileCallback(moddedVOFiles[j]);
