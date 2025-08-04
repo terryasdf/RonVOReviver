@@ -10,7 +10,7 @@ public class VOReviver
     private static readonly string InPakVOPath = "Content\\VO_PC";
 
     private VOManager _originalVOManager = new();
-    private VOManager _moddedVOManager = new();
+    private ModdedVOManager _moddedVOManager = new();
 
     private string _destinationFolderPath = string.Empty;
 

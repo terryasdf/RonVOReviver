@@ -42,6 +42,11 @@ public class VOManager
         return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices.Count : 0;
     }
 
+    public virtual string[] GetVOFiles()
+    {
+        return Directory.GetFiles(FolderPath, "*.ogg");
+    }
+
     /// <summary>
     /// Reads from <paramref name="path"/> and counts types of VO files.
     /// </summary>
@@ -54,7 +59,8 @@ public class VOManager
     /// </param>
     public VOManager(string path, Callback progressCallback, Callback onFormatExceptionCallback)
     {
-        string[] filesArray = Directory.GetFiles(path, "*.ogg");
+        FolderPath = path;
+        string[] filesArray = GetVOFiles();
         _voIndicesMap = [];
         for (int i = 0; i < filesArray.Length; ++i)
         {
@@ -63,7 +69,7 @@ public class VOManager
             try
             {
                 string voType = GetVOType(filesArray[i], out string id);
-                Logger.Debug($"Found .ogg under folder: {voType}, id={id}");
+                Logger.Debug($"Found VO under folder: {voType}, id={id}");
 
                 if (!_voIndicesMap.TryGetValue(voType, out List<int>? indices))
                 {
@@ -85,6 +91,5 @@ public class VOManager
             }
         }
         Files.Sort();
-        FolderPath = path;
     }
 }
