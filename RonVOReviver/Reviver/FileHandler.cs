@@ -1,10 +1,5 @@
 ﻿using NLog;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RonVOReviver.Reviver;
 
@@ -19,5 +14,11 @@ public class FileHandler
             Directory.Delete(path, true);
             Logger.Debug($"Deleted folder: {path}");
         }
+    }
+
+    public static void Copy(string srcFile, string dstFile)
+    {
+        File.Copy(srcFile, dstFile);
+        Logger.Debug($"Copied \"{srcFile}\" as \"{dstFile}\"");
     }
 }

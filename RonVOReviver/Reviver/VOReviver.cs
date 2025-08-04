@@ -96,8 +96,7 @@ public class VOReviver
                     string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
                     try
                     {
-                        File.Copy(moddedVOFiles[j], dstFile);
-                        Logger.Debug($"Copied \"{moddedVOFiles[j]}\" as \"{dstFile}\"");
+                        FileHandler.Copy(moddedVOFiles[j], dstFile);
                         if (numOriginal == 0)
                         {
                             extraVOTypeFileCallback(moddedVOFiles[j]);
