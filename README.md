@@ -3,7 +3,8 @@
 This is a Ready or Not mod tool that greatly simplifies the process of creating packed-up VO mods for LSS Update. The following features are supported:
 
 - Transparent reading and cloning process
-- Auto format detection
+- Auto audio format conversion (TBA)
+- Auto naming format detection
 - Transfer of multi-language subtitle files
 - Missing VO type listing
 - Auto paking
@@ -23,14 +24,14 @@ There's no need for configuring your own UnrealPak setup. Here is what you need 
 
 ### 1. Select the folder of the vanilla VO
 
-E.g. if your modded character is `SWATJudge`, the path should be `<SomePath>\SWATJudge`. Note that:
+E.g. if your modded character is `SWATJudge`, the path should be `<SomePath>\SWATJudge`. The list view below will show all valid VO files after selecting the folder. Note that:
 
 - Character name will be auto-detected (also editable)
 - [Zero padding format](#4-check-and-edit-the-character-name-and-other-settings) will be auto-detected (you can view the padding results at the preview section on the middle right)
 
 ### 2. Select the folder of your modded VO
 
-E.g. if your modded character is `SWATJudge`, The path should be `<SomePath>\SWATJudge`.
+E.g. if your modded character is `SWATJudge`, The path should be `<SomePath>\SWATJudge`. The list view below will show all valid VO files after selecting the folder.
 
 Subtitle files (in format of `sub_*.csv`) in this folder will be loaded. Note that subtitles are **not compulsory** and you may put in whatever languages supported by your mod.
 
@@ -43,7 +44,7 @@ Zero padding length determines how many zeros should be placed before the index 
 - HelicopterApproachingLevel_**01**.ogg has zero padding of length 2, since one `'0'` character is added before `'1'`.
 
 ### 5. Choose the folder to save your generated files
-### 6. Click the `Rivive!` button
+### 6. Click the `Revive!` button
 
 - Your packed mod, along with the unpacked version can be found under the same folder. In case that you need to adjust file names, subtitles, etc., you may also click the `Pak Only` button to pak the mod again after modifying in the unpacked folder.
 
