@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Title = $"RON VO Reviver (by terryzzz) {Application.ResourceAssembly.GetName().Version}";
         TextBoxPakName.Text = DefaultPakName;
         UpdateZeroFill();
         DictionaryENUS.Source = new Uri("Languages/en-us.xaml", UriKind.Relative);
