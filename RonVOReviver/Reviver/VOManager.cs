@@ -60,18 +60,19 @@ public class VOManager
         {
             // Pak contents are not case-sensitive.
             filesArray[i] = filesArray[i].ToLower();
+            string voType = GetVOType(filesArray[i], out string id);
+            Logger.Debug($"Found .ogg under folder: {voType}, id={id}");
+
+            if (!_voIndicesMap.TryGetValue(voType, out List<int>? indices))
+            {
+                indices = [];
+            }
+
             try
             {
-                string voType = GetVOType(filesArray[i], out string id);
-                Logger.Debug($"Found .ogg under folder: {voType}, id={id}");
-
-                if (!_voIndicesMap.TryGetValue(voType, out List<int>? indices))
-                {
-                    indices = [];
-                    _voIndicesMap[voType] = indices;
-                }
-                Files.Add(filesArray[i]);
                 indices.Add(int.Parse(id));
+                Files.Add(filesArray[i]);
+                _voIndicesMap[voType] = indices;
                 if (ZeroFillLength > id.Length)
                 {
                     ZeroFillLength = id.Length;
