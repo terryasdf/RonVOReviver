@@ -37,31 +37,22 @@ public class VOReviver
 
     public void PakVOFiles() => Packer.Pack(_destinationFolderPath);
 
-    public void CopyVOFiles(out List<string> missingVOTypes,
-        Callback extraVOTypeFileCallback, Callback progressCallback,
+    public async Task CopyVOFiles(Callback extraVOTypeFileCallback, Callback progressCallback,
         Callback onIOExceptionCallback)
     {
-        missingVOTypes = [];
-
         // Clear destination directory
         string newVOFolderPath = $"{_destinationFolderPath}\\{InPakVOPath}\\{Character}";
         string tempFolderPath = $"{_destinationFolderPath}\\temp";
         FileHandler.ClearDirectory(_destinationFolderPath);
         Directory.CreateDirectory(newVOFolderPath);
-        Directory.CreateDirectory(tempFolderPath);
         
         int numModdedVO = _moddedVOManager.Files.Count;
-        string[] moddedVOFiles = [.. _moddedVOManager.Files];
+        IReadOnlyList<string> moddedVOFiles = _moddedVOManager.Files;
 
         // Convert audio format and save to a temp folder if necessary
         if (!_moddedVOManager.IsOgg)
         {
-            for (int i = 0; i < numModdedVO; ++i)
-            {
-                string tempFile = $"{tempFolderPath}\\{Path.GetFileNameWithoutExtension(moddedVOFiles[i])}.ogg";
-                AudioConverter.ConvertToOgg(moddedVOFiles[i], tempFile);
-                moddedVOFiles[i] = tempFile;
-            }
+            moddedVOFiles = await FileHandler.ConvertVOFilesAsync(_moddedVOManager.Files, tempFolderPath);
         }
 
         int nextTypeCur = 0;
@@ -121,13 +112,5 @@ public class VOReviver
         }
 
         FileHandler.ClearDirectory(tempFolderPath);
-
-        foreach (string voType in _originalVOManager.GetVOTypes())
-        {
-            if (!_moddedVOManager.HasVOType(voType))
-            {
-                missingVOTypes.Add(voType);
-            }
-        }
     }
 }

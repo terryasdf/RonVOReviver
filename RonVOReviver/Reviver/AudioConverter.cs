@@ -7,9 +7,11 @@ public class AudioConverter
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public static void ConvertToOgg(string srcFile, string dstFile)
+    public static async Task ConvertToOggAsync(string srcFile, string dstFile)
     {
-        Logger.Info($"Converting {srcFile} to {dstFile}");
-        FFMpegArguments.FromFileInput(srcFile).OutputToFile(dstFile).ProcessSynchronously();
+        Logger.Debug($"Converting {srcFile} to {dstFile}");
+        if (await FFMpegArguments.FromFileInput(srcFile).OutputToFile(dstFile).ProcessAsynchronously())
+            return;
+        Logger.Error($"Failed to convert {srcFile} to {dstFile}");
     }
 }

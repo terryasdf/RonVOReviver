@@ -190,7 +190,7 @@ public partial class MainWindow : Window
         e.CanExecute = true;
     }
 
-    private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    private async void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
     {
         VOFileListDst.ClearItems();
 
@@ -198,14 +198,15 @@ public partial class MainWindow : Window
         List<string> FailedFiles = [];
         try
         {
-            _reviver.CopyVOFiles(out List<string> missingVOTypes,
+            List<string> missingVOTypes = [];
+            await _reviver.CopyVOFiles(
                 (path) => ListBoxExtra.Items.Add(path),
                 (path) =>
                 {
                     TextBlockProgress.Text = path;
                     VOFileListDst.AddItem(path);
                 },
-                (path) => FailedFiles.Add(path));
+                FailedFiles.Add);
 
             ListBoxMissing.ItemsSource = missingVOTypes;
             if (FailedFiles.Count > 0)

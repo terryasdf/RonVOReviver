@@ -10,9 +10,10 @@ public class VOManager
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly Dictionary<string, List<int>> _voIndicesMap = [];
+    private readonly List<string> _files = [];
 
     public string FolderPath { get; protected set; } = string.Empty;
-    public List<string> Files { get; } = [];
+    public IReadOnlyList<string> Files { get => _files; }
     public int ZeroFillLength { get; set; } = 4;
 
     /// <summary>
@@ -77,7 +78,7 @@ public class VOManager
             try
             {
                 indices.Add(int.Parse(id));
-                Files.Add(filesArray[i]);
+                _files.Add(filesArray[i]);
                 _voIndicesMap[voType] = indices;
                 if (ZeroFillLength > id.Length)
                 {
@@ -91,6 +92,6 @@ public class VOManager
                 onFormatExceptionCallback(filesArray[i]);
             }
         }
-        Files.Sort();
+        _files.Sort();
     }
 }
