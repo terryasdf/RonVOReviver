@@ -99,7 +99,6 @@ public class SubtitleHandler : IDisposable, IAsyncDisposable
                             continue;
                         }
                         key = key.ToLower();
-                        Logger.Debug($"Read from CSV: key = {key}, dialogue = {dialogue}");
                         dict[key] = dialogue;
                     }
                     catch (CsvHelperException e)
@@ -115,7 +114,7 @@ public class SubtitleHandler : IDisposable, IAsyncDisposable
                 csvWriter.NextRecord();
                 handler._subtitles[fileName] = dict;
 
-                Logger.Debug($"Read subtitle file: {file}");
+                Logger.Info($"Read subtitle file: {file}");
             }
             catch (UnauthorizedAccessException e)
             {
@@ -151,7 +150,6 @@ public class SubtitleHandler : IDisposable, IAsyncDisposable
             }
             writer.WriteRecord(new Record { Key = newKey, Dialogue = dialogue! });
             writer.NextRecord();
-            Logger.Debug($"Written record to {fileName}: Key = {newKey}, Dialogue = {dialogue}");
         }
     }
 }
