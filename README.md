@@ -3,15 +3,15 @@
 This is a Ready or Not mod tool that greatly simplifies the process of creating packed-up VO mods for LSS Update. The following features are supported:
 
 - Transparent reading and cloning process
-- Auto audio format conversion (TBA)
+- Auto audio format conversion to .ogg (quality=6)
 - Auto naming format detection
 - Transfer of multi-language subtitle files
 - Missing VO type listing
-- Auto paking
+- Auto paking (**unpaked version also available for creating post-LSS mods**)
 - English and Simplifed Chinese UI
 - ...
 
-Existing mods can be revived and packed within a few clicks. For modders making new VO mods, there is **no need to replace all the VO files** (e.g. 38 variants of yelling at civilian), reducing the whole workload of making a LSS-compatible VO mod.
+Existing mods can be revived and packed within a few clicks. For modders making new VO mods, **this tool also fills extra variants by copy existing ones from the mod files**. (e.g. there are 38 variants of yelling at civilian VO in vanilla game but only 10 from your mod, this tool copy & paste the 10 VOs to the count of 38)
 
 ## Installation
 
@@ -27,7 +27,7 @@ There's no need for configuring your own UnrealPak setup. Here is what you need 
 E.g. if your modded character is `SWATJudge`, the path should be `<SomePath>\SWATJudge`. The list view below will show all valid VO files after selecting the folder. Note that:
 
 - Character name will be auto-detected (also editable)
-- [Zero padding format](#4-check-and-edit-the-character-name-and-other-settings) will be auto-detected (you can view the padding results at the preview section on the middle right)
+- Zero padding format will be the same as the vanilla files
 
 ### 2. Select the folder of your modded VO
 
@@ -36,13 +36,7 @@ E.g. if your modded character is `SWATJudge`, The path should be `<SomePath>\SWA
 Subtitle files (in format of `sub_*.csv`) in this folder will be loaded. Note that subtitles are **not compulsory** and you may put in whatever languages supported by your mod.
 
 ### 3. Edit your .pak name
-### 4. Check the Character Name and Zero Padding Setting
-
-Zero padding length determines how many zeros should be placed before the index number.
-
-- \[CALL\]ArrestFemale_**1**.ogg has no zero padding
-- HelicopterApproachingLevel_**01**.ogg has zero padding of length 2, since one `'0'` character is added before `'1'`.
-
+### 4. Check the Character Name
 ### 5. Choose the folder to save your generated files
 ### 6. Click the `Revive!` button
 
@@ -51,5 +45,3 @@ Zero padding length determines how many zeros should be placed before the index 
 # Conclusion
 
 This is my first time coding in C#. Do create issues and bug reports if you have encountered any issues while using this tool. Thx XD
-
->p.s. I have no idea why VOID developers have chosen to pak VO files in the LSS update. It helps nothing other than adding up difficulty of creating new VO mods, as well as ruining all of the existing ones. This is a BAD decision if you ask me.👎

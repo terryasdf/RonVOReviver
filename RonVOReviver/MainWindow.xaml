@@ -1,18 +1,15 @@
-﻿<Window x:Class="RonVOReviver.MainWindow"
+<Window x:Class="RonVOReviver.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:self="clr-namespace:RonVOReviver"
         xmlns:ui="clr-namespace:RonVOReviver.UI"
-        xmlns:n="clr-namespace:NumericUpDownLib;assembly=NumericUpDownLib"
         mc:Ignorable="d"
         Height="450" Width="800"
         Icon="/Assets/RON_VO_VOR_256x256.ico">
     <Window.CommandBindings>
         <CommandBinding Command="ApplicationCommands.New" Executed="NewCommand_Executed" CanExecute="NewCommand_CanExecute"/>
         <CommandBinding Command="ApplicationCommands.Save" Executed="SaveCommand_Executed" CanExecute="SaveCommand_CanExecute"/>
-        <CommandBinding Command="self:NumericUpDownZFillCommands.Update" CanExecute="ZFillUpdateCommand_CanExecute" Executed="ZFillUpdateCommand_Executed"/>
     </Window.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
@@ -32,7 +29,6 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
             <Grid Margin="0,0,5,0">
                 <Grid.ColumnDefinitions>
@@ -51,23 +47,6 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{DynamicResource MainWindow.TextBlockCharacter.Text}" VerticalAlignment="Center" />
                 <TextBox x:Name="TextBoxCharacter" Grid.Column="1" Margin="1,1,1,1" TextChanged="TextBoxCharacter_TextChanged" VerticalAlignment="Center"/>
-            </Grid>
-            <Grid Grid.Column="2" Margin="5,0,5,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{DynamicResource MainWindow.TextBlockZFill.Text}" VerticalAlignment="Center"/>
-                <n:NumericUpDown x:Name="NumericUpDownZFill" Grid.Column="1" Command="self:NumericUpDownZFillCommands.Update" MinValue="1" MaxValue="4" IsReadOnly="True" Margin="2,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                <Grid Grid.Column="2">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock x:Name="TextBlockZFillPreview1"/>
-                    <TextBlock x:Name="TextBlockZFillPreview2" Grid.Row="1"/>
-                </Grid>
             </Grid>
         </Grid>
 

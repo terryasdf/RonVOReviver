@@ -1,4 +1,4 @@
-﻿using NLog;
+using NLog;
 using RonVOReviver.Reviver;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -17,9 +17,6 @@ public partial class MainWindow : Window
     private static readonly ResourceDictionary DictionaryENUS = [];
     private static readonly ResourceDictionary DictionaryZHCN = [];
     private const string DefaultPakName = "pakchunk99-RevivedVO";
-    private const string ZFillPreviewVOType = "PreviewVO";
-    private const int ZFillPreviewIndex1 = 1;
-    private const int ZFillPreviewIndex2 = 12;
     private static readonly string RegexInvalidChars =
         $"[{string.Concat(Path.GetInvalidFileNameChars())} ]";
 
@@ -35,7 +32,6 @@ public partial class MainWindow : Window
         InitializeComponent();
         Title = $"RON VO Reviver (by terryzzz) {Application.ResourceAssembly.GetName().Version}";
         TextBoxPakName.Text = DefaultPakName;
-        UpdateZeroFill();
         DictionaryENUS.Source = new Uri("Languages/en-us.xaml", UriKind.Relative);
         DictionaryZHCN.Source = new Uri("Languages/zh-cn.xaml", UriKind.Relative);
         ResetDynamicResourcesMessageTexts();
@@ -51,13 +47,6 @@ public partial class MainWindow : Window
             Resources["MainWindow.MessageBoxFolderError.Text"];
         _messageBoxFileErrorText = (string)Application.Current.
             Resources["MainWindow.MessageBoxFileError.Text"];
-    }
-
-    private void UpdateZeroFill()
-    {
-        _reviver.ZeroFillLength = NumericUpDownZFill.Value;
-        TextBlockZFillPreview1.Text = $"{ZFillPreviewVOType}_{_reviver.ZeroFill(ZFillPreviewIndex1)}.ogg";
-        TextBlockZFillPreview2.Text = $"{ZFillPreviewVOType}_{_reviver.ZeroFill(ZFillPreviewIndex2)}.ogg";
     }
 
     public static void ShowErrorMessageBox(string text)
@@ -92,7 +81,6 @@ public partial class MainWindow : Window
             }
 
             VOFileListOriginal.IsEnabled = true;
-            NumericUpDownZFill.Value = _reviver.ZeroFillLength;
             TextBoxCharacter.Text = System.IO.Path.GetFileName(VOFileListOriginal.FolderPath);
             TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
                 "MainWindow.TextBlockProgess.LoadedOriginal.Text");
@@ -164,16 +152,6 @@ public partial class MainWindow : Window
     private void VOFileListDst_FolderSelect(object sender, RoutedEventArgs e)
     {
         _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
-    }
-
-    private void ZFillUpdateCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = true;
-    }
-
-    private void ZFillUpdateCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-    {
-        UpdateZeroFill();
     }
 
     private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -264,10 +242,4 @@ public partial class MainWindow : Window
     }
 
     #endregion
-}
-
-public static class NumericUpDownZFillCommands
-{
-    public static readonly RoutedUICommand Update = new(
-        "Update", "Update", typeof(NumericUpDownZFillCommands));
 }
