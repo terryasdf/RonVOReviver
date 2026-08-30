@@ -1,4 +1,4 @@
-using NLog;
+﻿using NLog;
 using RonVOReviver.Reviver;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private static string _messageBoxFileErrorText = string.Empty;
 
     private readonly VOReviver _reviver = new();
+    private bool _isProcessing = false;
 
     public MainWindow()
     {
@@ -70,9 +71,19 @@ public partial class MainWindow : Window
         List<string> skippedVOFiles = [];
         try
         {
-            _reviver.SetOriginalVOFolderPath(VOFileListOriginal.FolderPath,
-                (path) => VOFileListOriginal.AddItem(path),
-                (path) => skippedVOFiles.Add(path));
+            var progress = new Progress<VOManagerProgressReport>(report =>
+            {
+                switch (report.Type)
+                {
+                    case VOManagerProgressType.Success:
+                        VOFileListOriginal.AddItem(report.Path);
+                        break;
+                    case VOManagerProgressType.FormatError:
+                        skippedVOFiles.Add(report.Path);
+                        break;
+                }
+            });
+            _reviver.SetOriginalVOFolderPath(VOFileListOriginal.FolderPath, progress);
 
             if (skippedVOFiles.Count > 0)
             {
@@ -106,12 +117,21 @@ public partial class MainWindow : Window
         VOFileListModded.ClearItems();
 
         List<string> skippedVOFiles = [];
-        List<string> failedSubtitles = [];
         try
         {
-            _reviver.SetModdedVOFolderPath(VOFileListModded.FolderPath,
-                (path) => VOFileListModded.AddItem(path),
-                (path) => skippedVOFiles.Add(path));
+            var progress = new Progress<VOManagerProgressReport>(report =>
+            {
+                switch (report.Type)
+                {
+                    case VOManagerProgressType.Success:
+                        VOFileListModded.AddItem(report.Path);
+                        break;
+                    case VOManagerProgressType.FormatError:
+                        skippedVOFiles.Add(report.Path);
+                        break;
+                }
+            });
+            _reviver.SetModdedVOFolderPath(VOFileListModded.FolderPath, progress);
 
             if (skippedVOFiles.Count > 0)
             {
@@ -156,7 +176,8 @@ public partial class MainWindow : Window
 
     private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        if (VOFileListOriginal.FolderPath.Equals(string.Empty) ||
+        if (_isProcessing ||
+            VOFileListOriginal.FolderPath.Equals(string.Empty) ||
             VOFileListModded.FolderPath.Equals(string.Empty) ||
             VOFileListDst.FolderPath.Equals(string.Empty) ||
             TextBoxPakName.Text.Equals(string.Empty) ||
@@ -170,6 +191,8 @@ public partial class MainWindow : Window
 
     private async void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
     {
+        _isProcessing = true;
+        CommandManager.InvalidateRequerySuggested();
         VOFileListDst.ClearItems();
 
         ListBoxExtra.Items.Clear();
@@ -177,14 +200,24 @@ public partial class MainWindow : Window
         try
         {
             List<string> missingVOTypes = [];
-            await _reviver.CopyVOFiles(
-                (path) => ListBoxExtra.Items.Add(path),
-                (path) =>
+            var progress = new Progress<VOProgressReport>(report =>
+            {
+                switch (report.Type)
                 {
-                    TextBlockProgress.Text = path;
-                    VOFileListDst.AddItem(path);
-                },
-                FailedFiles.Add);
+                    case VOProgressType.FileCopied:
+                        TextBlockProgress.Text = report.Path;
+                        VOFileListDst.AddItem(report.Path);
+                        break;
+                    case VOProgressType.ExtraVOType:
+                        ListBoxExtra.Items.Add(report.Path);
+                        break;
+                    case VOProgressType.Error:
+                        FailedFiles.Add(report.Path);
+                        break;
+                }
+            });
+
+            await _reviver.CopyVOFiles(progress);
 
             ListBoxMissing.ItemsSource = missingVOTypes;
             if (FailedFiles.Count > 0)
@@ -193,7 +226,9 @@ public partial class MainWindow : Window
                 ShowWarningMessageBox(message);
             }
 
-            _reviver.PakVOFiles();
+            await _reviver.PakVOFilesAsync();
+            TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
+                "MainWindow.TextBlockProgess.PakSuccess.Text");
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -207,23 +242,37 @@ public partial class MainWindow : Window
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
             ShowErrorMessageBox(message);
         }
+        finally
+        {
+            _isProcessing = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     private void SaveCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        e.CanExecute = !VOFileListDst.FolderPath.Equals(string.Empty);
+        e.CanExecute = !_isProcessing && !VOFileListDst.FolderPath.Equals(string.Empty);
     }
 
-    private void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    private async void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
     {
+        _isProcessing = true;
+        CommandManager.InvalidateRequerySuggested();
         try
         {
-            _reviver.PakVOFiles();
+            await _reviver.PakVOFilesAsync();
+            TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
+                "MainWindow.TextBlockProgess.PakSuccess.Text");
         }
         catch (DirectoryNotFoundException ex)
         {
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
             ShowErrorMessageBox(message);
+        }
+        finally
+        {
+            _isProcessing = false;
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 

@@ -19,8 +19,8 @@ public class ModdedVOManager : VOManager
 
     public ModdedVOManager() : base() { }
 
-    public ModdedVOManager(string path, Callback progressCallback, Callback onFormatExceptionCallback) :
-        base(path, progressCallback, onFormatExceptionCallback) { }
+    public ModdedVOManager(string path, IProgress<VOManagerProgressReport>? progress = null) :
+        base(path, progress) { }
 
     public override string[] GetVOFiles()
     {

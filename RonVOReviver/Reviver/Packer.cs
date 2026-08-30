@@ -1,4 +1,4 @@
-﻿using NLog;
+using NLog;
 using System.Diagnostics;
 using System.IO;
 
@@ -17,7 +17,7 @@ public static class Packer
         Process.Start(processInfo);
     }
 
-    public static void Pack(string pakPath)
+    public static async Task PackAsync(string pakPath)
     {
         if (!Directory.Exists(pakPath))
         {
@@ -35,7 +35,7 @@ public static class Packer
             Logger.Info($"Paking process not started");
             return;
         }
-        p.WaitForExit();
+        await p.WaitForExitAsync();
         Logger.Info($"Paking process finished");
 
         OpenExplorer($"{pakPath}\\..");

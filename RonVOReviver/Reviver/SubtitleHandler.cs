@@ -20,11 +20,6 @@ public class SubtitleHandler : IDisposable
         public string Context { get; set; }
     }
 
-    /// <summary>
-    /// Dummy constructor.
-    /// </summary>
-    public SubtitleHandler() { }
-
     public void Dispose()
     {
         foreach (CsvWriter writer in _writers.Values)
@@ -40,7 +35,7 @@ public class SubtitleHandler : IDisposable
     /// <param name="oldSubtitleFolderPath">The folder path for old files</param>
     /// <param name="outputFolderPath">The folder path for generated files</param>
     public SubtitleHandler(string oldSubtitleFolderPath, string outputFolderPath,
-        Callback onIOExceptionCallback)
+        IProgress<VOProgressReport>? progress = null)
     {
         string[] files = Directory.GetFiles(oldSubtitleFolderPath, "sub_*.csv");
         foreach (string file in files)
@@ -102,17 +97,17 @@ public class SubtitleHandler : IDisposable
             }
             catch (UnauthorizedAccessException e)
             {
-                onIOExceptionCallback(file);
+                progress?.Report(new VOProgressReport(file, VOProgressType.Error));
                 Logger.Error($"Unauthorized access to write new subtitle file: {outputFolderPath}\\{fileName}\n{e.Message}");
             }
             catch (FileFormatException e)
             {
-                onIOExceptionCallback(file);
+                progress?.Report(new VOProgressReport(file, VOProgressType.Error));
                 Logger.Error($"Invalid file format: {file}\n{e.Message}");
             }
             catch (IOException e)
             {
-                onIOExceptionCallback(file);
+                progress?.Report(new VOProgressReport(file, VOProgressType.Error));
                 Logger.Error($"Failed to read subtitle file: {file}\n{e.Message}");
             }
         }

@@ -1,9 +1,7 @@
-using NLog;
+﻿using NLog;
 using System.IO;
 
 namespace RonVOReviver.Reviver;
-
-public delegate void Callback(string path);
 
 public class VOManager
 {
@@ -14,7 +12,6 @@ public class VOManager
 
     public string FolderPath { get; protected set; } = string.Empty;
     public IReadOnlyList<string> Files { get => _files; }
-    public int ZeroFillLength { get; set; } = 4;
 
     /// <summary>
     /// Dummy constructor.
@@ -54,13 +51,10 @@ public class VOManager
     /// Reads from <paramref name="path"/> and counts types of VO files.
     /// </summary>
     /// <param name="path">The character folder (e.g. SWATJudge)</param>
-    /// <param name="progressCallback">
-    /// Called upon reading each successful VO file
+    /// <param name="progress">
+    /// Called upon reading each VO file (reporting success or format error)
     /// </param>
-    /// <param name="onFormatExceptionCallback">
-    /// Called upon unintended naming format (should be like XXXX_1.ogg)
-    /// </param>
-    public VOManager(string path, Callback progressCallback, Callback onFormatExceptionCallback)
+    public VOManager(string path, IProgress<VOManagerProgressReport>? progress = null)
     {
         FolderPath = path;
         string[] filesArray = GetVOFiles();
@@ -82,16 +76,12 @@ public class VOManager
                 files.Add(filesArray[i]);
                 _files.Add(filesArray[i]);
                 _voFilesMap[voType] = files;
-                if (ZeroFillLength > index.Length)
-                {
-                    ZeroFillLength = index.Length;
-                }
-                progressCallback(filesArray[i]);
+                progress?.Report(new VOManagerProgressReport(filesArray[i], VOManagerProgressType.Success));
             }
             catch (FormatException e)
             {
                 Logger.Error($"Parsing failed at {filesArray[i]}: {e.Message}");
-                onFormatExceptionCallback(filesArray[i]);
+                progress?.Report(new VOManagerProgressReport(filesArray[i], VOManagerProgressType.FormatError));
             }
         }
         _files.Sort();
