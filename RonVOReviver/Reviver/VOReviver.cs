@@ -1,4 +1,4 @@
-﻿using NLog;
+using NLog;
 using System.Diagnostics;
 using System.IO;
 
@@ -61,34 +61,23 @@ public class VOReviver
         for (int i = 0; i < numModdedVO; i = nextTypeCur)
         {
             // Find all files of one voType
-            string voType = VOManager.GetVOType(moddedVOFiles[i], out string _);
+            string voType = VOManager.GetVOType(moddedVOFiles[i]);
             while (nextTypeCur < numModdedVO &&
-                VOManager.GetVOType(moddedVOFiles[nextTypeCur], out string _).Equals(voType))
+                VOManager.GetVOType(moddedVOFiles[nextTypeCur]).Equals(voType))
             {
                 ++nextTypeCur;
             }
 
-            //int numOriginal = _originalVOManager.GetMaxIndex(voType);
-            int numModded = _moddedVOManager.GetCount(voType);
-
-            Debug.Assert(numModded > 0);
-
-            /*
-            // Times of reusing modded files to fully replace original files:
-            // Ceil{(numOriginal + 1) / numModded}
-            int numRepeat = (numOriginal + numModded) / numModded;
-            */
-
             // Copy files for numRepeat times
-            IReadOnlyList<int> originalIndices = _originalVOManager.GetIndices(voType);
-            bool hasOriginal = originalIndices.Count > 0;
+            IReadOnlyList<string> originalFiles = _originalVOManager.GetFiles(voType);
+            bool hasOriginal = originalFiles.Count > 0;
 
             int j = i;
-            foreach (int originalIndex in originalIndices)
+            foreach (string originalFile in originalFiles)
             {
                 string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
-                string newKey = $"{voType}_{ZeroFill(originalIndex)}";
-                string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
+                string newKey = Path.GetFileNameWithoutExtension(originalFile);
+                string dstFile = $"{newVOFolderPath}\\{Path.GetFileName(originalFile)}";
                 try
                 {
                     FileHandler.Copy(moddedVOFiles[j], dstFile);

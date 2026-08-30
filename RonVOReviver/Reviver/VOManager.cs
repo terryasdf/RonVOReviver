@@ -1,4 +1,4 @@
-﻿using NLog;
+using NLog;
 using System.IO;
 
 namespace RonVOReviver.Reviver;
@@ -9,7 +9,7 @@ public class VOManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly Dictionary<string, List<int>> _voIndicesMap = [];
+    private readonly Dictionary<string, List<string>> _voFilesMap = [];
     private readonly List<string> _files = [];
 
     public string FolderPath { get; protected set; } = string.Empty;
@@ -21,26 +21,28 @@ public class VOManager
     /// </summary>
     public VOManager() { }
 
-    public static string GetVOType(string file, out string strIndex)
+    public static string GetVOType(string file)
     {
         string[] components = Path.GetFileName(file).Split('_');
-        strIndex = components.Last().Split('.')[0];
         Array.Resize(ref components, components.Length - 1);
         return string.Join("_", components);
     }
 
-    public Dictionary<string, List<int>>.KeyCollection GetVOTypes() => _voIndicesMap.Keys;
-
-    public bool HasVOType(string voType) => _voIndicesMap.ContainsKey(voType);
-
-    public IReadOnlyList<int> GetIndices(string voType)
+    public static string GetVOType(string file, out string index)
     {
-        return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices : [];
+        string[] components = Path.GetFileName(file).Split('_');
+        index = components.Last().Split('.')[0];
+        Array.Resize(ref components, components.Length - 1);
+        return string.Join("_", components);
     }
 
-    public int GetCount(string voType)
+    public Dictionary<string, List<string>>.KeyCollection GetVOTypes() => _voFilesMap.Keys;
+
+    public bool HasVOType(string voType) => _voFilesMap.ContainsKey(voType);
+
+    public IReadOnlyList<string> GetFiles(string voType)
     {
-        return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices.Count : 0;
+        return _voFilesMap.TryGetValue(voType, out List<string>? files) ? files : [];
     }
 
     public virtual string[] GetVOFiles()
@@ -62,27 +64,27 @@ public class VOManager
     {
         FolderPath = path;
         string[] filesArray = GetVOFiles();
-        _voIndicesMap = [];
+        _voFilesMap = [];
         for (int i = 0; i < filesArray.Length; ++i)
         {
             // Pak contents are not case-sensitive.
             filesArray[i] = filesArray[i].ToLower();
-            string voType = GetVOType(filesArray[i], out string id);
-            Logger.Debug($"Found VO under folder: {voType}, id={id}");
+            string voType = GetVOType(filesArray[i], out string index);
+            Logger.Debug($"Found VO under folder: {voType}, file={filesArray[i]}");
 
-            if (!_voIndicesMap.TryGetValue(voType, out List<int>? indices))
+            if (!_voFilesMap.TryGetValue(voType, out List<string>? files))
             {
-                indices = [];
+                files = [];
             }
 
             try
             {
-                indices.Add(int.Parse(id));
+                files.Add(filesArray[i]);
                 _files.Add(filesArray[i]);
-                _voIndicesMap[voType] = indices;
-                if (ZeroFillLength > id.Length)
+                _voFilesMap[voType] = files;
+                if (ZeroFillLength > index.Length)
                 {
-                    ZeroFillLength = id.Length;
+                    ZeroFillLength = index.Length;
                 }
                 progressCallback(filesArray[i]);
             }
