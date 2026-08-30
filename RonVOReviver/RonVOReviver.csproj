@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -26,6 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="blank.ogg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
