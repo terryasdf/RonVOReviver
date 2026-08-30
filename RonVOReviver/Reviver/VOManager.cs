@@ -33,9 +33,9 @@ public class VOManager
 
     public bool HasVOType(string voType) => _voIndicesMap.ContainsKey(voType);
 
-    public int GetMaxIndex(string voType)
+    public IReadOnlyList<int> GetIndices(string voType)
     {
-        return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices.Max() : 0;
+        return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices : [];
     }
 
     public int GetCount(string voType)

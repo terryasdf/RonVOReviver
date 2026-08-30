@@ -68,45 +68,53 @@ public class VOReviver
                 ++nextTypeCur;
             }
 
-            int numOriginal = _originalVOManager.GetMaxIndex(voType);
+            //int numOriginal = _originalVOManager.GetMaxIndex(voType);
             int numModded = _moddedVOManager.GetCount(voType);
 
             Debug.Assert(numModded > 0);
+
+            /*
             // Times of reusing modded files to fully replace original files:
             // Ceil{(numOriginal + 1) / numModded}
             int numRepeat = (numOriginal + numModded) / numModded;
+            */
 
             // Copy files for numRepeat times
-            int index = 0;
-            while (numRepeat-- > 0)
+            IReadOnlyList<int> originalIndices = _originalVOManager.GetIndices(voType);
+            bool hasOriginal = originalIndices.Count > 0;
+
+            int j = i;
+            foreach (int originalIndex in originalIndices)
             {
-                for (int j = i; j < nextTypeCur; ++j)
+                string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
+                string newKey = $"{voType}_{ZeroFill(originalIndex)}";
+                string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
+                try
                 {
-                    string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
-                    string newKey = $"{voType}_{ZeroFill(index++)}";
-                    string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
-                    try
+                    FileHandler.Copy(moddedVOFiles[j], dstFile);
+                    if (!hasOriginal)
                     {
-                        FileHandler.Copy(moddedVOFiles[j], dstFile);
-                        if (numOriginal == 0)
-                        {
-                            extraVOTypeFileCallback(moddedVOFiles[j]);
-                            Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
-                        }
-                        progressCallback(dstFile);
-                        subtitleHandler.WriteLine(oldKey, newKey);
+                        extraVOTypeFileCallback(moddedVOFiles[j]);
+                        Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
                     }
-                    catch (UnauthorizedAccessException e)
-                    {
-                        onIOExceptionCallback(moddedVOFiles[j]);
-                        Logger.Error($"Failed to copy due to unauthorized access: " +
-                            $"{moddedVOFiles[j]}\n{e.Message}");
-                    }
-                    catch (IOException e)
-                    {
-                        onIOExceptionCallback(moddedVOFiles[j]);
-                        Logger.Error($"Failed to copy: {moddedVOFiles[j]}\n{e.Message}");
-                    }
+                    progressCallback(dstFile);
+                    subtitleHandler.WriteLine(oldKey, newKey);
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    onIOExceptionCallback(moddedVOFiles[j]);
+                    Logger.Error($"Failed to copy due to unauthorized access: " +
+                        $"{moddedVOFiles[j]}\n{e.Message}");
+                }
+                catch (IOException e)
+                {
+                    onIOExceptionCallback(moddedVOFiles[j]);
+                    Logger.Error($"Failed to copy: {moddedVOFiles[j]}\n{e.Message}");
+                }
+
+                if (++j == nextTypeCur)
+                {
+                    j = i;
                 }
             }
         }

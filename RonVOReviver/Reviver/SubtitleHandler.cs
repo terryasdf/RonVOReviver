@@ -1,4 +1,5 @@
-﻿using CsvHelper;
+using CsvHelper;
+using CsvHelper.Configuration;
 using NLog;
 using System.Globalization;
 using System.IO;
@@ -48,7 +49,18 @@ public class SubtitleHandler : IDisposable
             try
             {
                 using StreamReader sr = new(file);
-                using CsvReader csvReader = new(sr, CultureInfo.InvariantCulture);
+                bool hasBadData = false;
+
+                CsvConfiguration csvConfig = new(CultureInfo.InvariantCulture)
+                {
+                    BadDataFound = args =>
+                    {
+                        hasBadData = true;
+                        Logger.Error($"Skipping bad row in subtitle {file}: {args.RawRecord}");
+                    },
+                    MissingFieldFound = null
+                };
+                using CsvReader csvReader = new(sr, csvConfig);
 
                 // Skip the header row
                 csvReader.Read();
@@ -56,15 +68,27 @@ public class SubtitleHandler : IDisposable
                 Dictionary<string, string> dict = [];
                 while (csvReader.Read())
                 {
-                    string? key = csvReader.GetField("Key");
-                    string? dialogue = csvReader.GetField("Dialogue");
-                    if (key == null || dialogue == null)
+                    try
                     {
-                        throw new FileFormatException($"Invalid csv format in {file}");
+                        hasBadData = false;
+                        string? key = csvReader.GetField("Key");
+                        string? dialogue = csvReader.GetField("Dialogue");
+                        if (hasBadData)
+                        {
+                            continue;
+                        }
+                        if (key == null || dialogue == null)
+                        {
+                            continue;
+                        }
+                        key = key.ToLower();
+                        Logger.Debug($"Read from CSV: key = {key}, dialogue = {dialogue}");
+                        dict[key] = dialogue;
                     }
-                    key = key.ToLower();
-                    Logger.Debug($"Read from CSV: key = {key}, dialogue = {dialogue}");
-                    dict[key] = dialogue;
+                    catch (CsvHelperException e)
+                    {
+                        Logger.Error($"Bad data in subtitle {file}: {e.Message}");
+                    }
                 }
 
                 StreamWriter sw = new($"{outputFolderPath}\\{fileName}");
