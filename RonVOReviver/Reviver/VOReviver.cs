@@ -1,5 +1,4 @@
-using NLog;
-using System.Diagnostics;
+﻿using NLog;
 using System.IO;
 
 namespace RonVOReviver.Reviver;
@@ -25,7 +24,7 @@ public class VOReviver(
             string tempFolderPath = $"{destinationFolderPath}\\temp";
             FileHandler.ClearDirectory(destinationFolderPath);
             Directory.CreateDirectory(newVOFolderPath);
-            
+
             int numModdedVO = moddedVOManager.Files.Count;
             IReadOnlyList<string> moddedVOFiles = moddedVOManager.Files;
 
@@ -58,9 +57,6 @@ public class VOReviver(
                 {
                     while (j < nextTypeCur)
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        string dstFile = $"{newVOFolderPath}\\{Path.GetFileName(moddedVOFiles[j])}";
-
                         progress?.Report(new VOProgressReport(moddedVOFiles[j], VOProgressType.ExtraVOType));
                         Logger.Info($"Extra file: \"{moddedVOFiles[j++]}\"");
                     }

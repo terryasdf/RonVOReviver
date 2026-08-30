@@ -13,11 +13,6 @@ public class VOManager
     public string FolderPath { get; protected set; } = string.Empty;
     public IReadOnlyList<string> Files { get => _files; }
 
-    /// <summary>
-    /// Dummy constructor.
-    /// </summary>
-    public VOManager() { }
-
     public static string GetVOType(string file)
     {
         string[] components = Path.GetFileName(file).Split('_');

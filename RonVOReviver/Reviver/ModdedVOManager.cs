@@ -1,26 +1,15 @@
 ﻿using NLog;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RonVOReviver.Reviver;
 
-public class ModdedVOManager : VOManager
+public class ModdedVOManager(string path, IProgress<VOManagerProgressReport>? progress = null) : VOManager(path, progress)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public static readonly string[] AllowedPatterns = ["*.ogg", "*.wav", "*.mp3", "*.m4a"];
 
     public bool IsOgg { get; protected set; } = false;
-
-    public ModdedVOManager() : base() { }
-
-    public ModdedVOManager(string path, IProgress<VOManagerProgressReport>? progress = null) :
-        base(path, progress) { }
 
     public override string[] GetVOFiles()
     {
