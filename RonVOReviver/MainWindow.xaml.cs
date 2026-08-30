@@ -1,5 +1,6 @@
-﻿using NLog;
+using NLog;
 using RonVOReviver.Reviver;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -25,7 +26,8 @@ public partial class MainWindow : Window
     private static string _messageBoxFolderErrorText = string.Empty;
     private static string _messageBoxFileErrorText = string.Empty;
 
-    private readonly VOReviver _reviver = new();
+    private VOManager? _originalVOManager;
+    private ModdedVOManager? _moddedVOManager;
     private bool _isProcessing = false;
 
     public MainWindow()
@@ -67,6 +69,7 @@ public partial class MainWindow : Window
         Logger.Info($"Original VO Folder chosen: {VOFileListOriginal.FolderPath}");
         VOFileListOriginal.IsEnabled = false;
         VOFileListOriginal.ClearItems();
+        _originalVOManager = null;
 
         List<string> skippedVOFiles = [];
         try
@@ -83,7 +86,7 @@ public partial class MainWindow : Window
                         break;
                 }
             });
-            _reviver.SetOriginalVOFolderPath(VOFileListOriginal.FolderPath, progress);
+            _originalVOManager = new VOManager(VOFileListOriginal.FolderPath, progress);
 
             if (skippedVOFiles.Count > 0)
             {
@@ -115,6 +118,7 @@ public partial class MainWindow : Window
         Logger.Info($"Modded VO Folder chosen: {VOFileListModded.FolderPath}");
         VOFileListModded.IsEnabled = false;
         VOFileListModded.ClearItems();
+        _moddedVOManager = null;
 
         List<string> skippedVOFiles = [];
         try
@@ -131,7 +135,7 @@ public partial class MainWindow : Window
                         break;
                 }
             });
-            _reviver.SetModdedVOFolderPath(VOFileListModded.FolderPath, progress);
+            _moddedVOManager = new ModdedVOManager(VOFileListModded.FolderPath, progress);
 
             if (skippedVOFiles.Count > 0)
             {
@@ -160,28 +164,23 @@ public partial class MainWindow : Window
     private void TextBoxPakName_TextChanged(object sender, TextChangedEventArgs e)
     {
         TextBoxPakName.Text = Regex.Replace(TextBoxPakName.Text, RegexInvalidChars, string.Empty);
-        _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
     }
 
     private void TextBoxCharacter_TextChanged(object sender, TextChangedEventArgs e)
     {
         TextBoxCharacter.Text = Regex.Replace(TextBoxCharacter.Text, RegexInvalidChars, string.Empty);
-        _reviver.Character = TextBoxCharacter.Text;
-    }
-
-    private void VOFileListDst_FolderSelect(object sender, RoutedEventArgs e)
-    {
-        _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
     }
 
     private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
         if (_isProcessing ||
-            VOFileListOriginal.FolderPath.Equals(string.Empty) ||
-            VOFileListModded.FolderPath.Equals(string.Empty) ||
-            VOFileListDst.FolderPath.Equals(string.Empty) ||
-            TextBoxPakName.Text.Equals(string.Empty) ||
-            TextBoxCharacter.Text.Equals(string.Empty))
+            _originalVOManager == null ||
+            _moddedVOManager == null ||
+            String.IsNullOrEmpty(VOFileListOriginal.FolderPath) ||
+            String.IsNullOrEmpty(VOFileListModded.FolderPath) ||
+            String.IsNullOrEmpty(VOFileListDst.FolderPath) ||
+            String.IsNullOrEmpty(TextBoxPakName.Text) ||
+            String.IsNullOrEmpty(TextBoxCharacter.Text))
         {
             e.CanExecute = false;
             return;
@@ -191,15 +190,31 @@ public partial class MainWindow : Window
 
     private async void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
     {
+        if (_originalVOManager == null || _moddedVOManager == null)
+        {
+            return;
+        }
+
+        Debug.Assert(!String.IsNullOrEmpty(VOFileListDst.FolderPath));
+        Debug.Assert(!String.IsNullOrEmpty(TextBoxPakName.Text));
+
         _isProcessing = true;
         CommandManager.InvalidateRequerySuggested();
         VOFileListDst.ClearItems();
 
         ListBoxExtra.Items.Clear();
+        ListBoxMissing.Items.Clear();
         List<string> FailedFiles = [];
+
         try
         {
-            List<string> missingVOTypes = [];
+            string destinationFolderPath = Path.Combine(VOFileListDst.FolderPath, TextBoxPakName.Text);
+            VOReviver reviver = new(
+                _originalVOManager,
+                _moddedVOManager,
+                destinationFolderPath,
+                TextBoxCharacter.Text);
+
             var progress = new Progress<VOProgressReport>(report =>
             {
                 switch (report.Type)
@@ -211,22 +226,23 @@ public partial class MainWindow : Window
                     case VOProgressType.ExtraVOType:
                         ListBoxExtra.Items.Add(report.Path);
                         break;
+                    case VOProgressType.MissingVOType:
+                        ListBoxMissing.Items.Add(report.Path);
+                        break;
                     case VOProgressType.Error:
                         FailedFiles.Add(report.Path);
                         break;
                 }
             });
 
-            await _reviver.CopyVOFiles(progress);
-
-            ListBoxMissing.ItemsSource = missingVOTypes;
+            await reviver.CopyVOFiles(progress);
             if (FailedFiles.Count > 0)
             {
                 string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
                 ShowWarningMessageBox(message);
             }
 
-            await _reviver.PakVOFilesAsync();
+            await reviver.PakVOFilesAsync();
             TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
                 "MainWindow.TextBlockProgess.PakSuccess.Text");
         }
@@ -251,7 +267,9 @@ public partial class MainWindow : Window
 
     private void SaveCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        e.CanExecute = !_isProcessing && !VOFileListDst.FolderPath.Equals(string.Empty);
+        e.CanExecute = !_isProcessing &&
+            !String.IsNullOrEmpty(VOFileListDst.FolderPath) &&
+            !String.IsNullOrEmpty(TextBoxPakName.Text);
     }
 
     private async void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -260,7 +278,8 @@ public partial class MainWindow : Window
         CommandManager.InvalidateRequerySuggested();
         try
         {
-            await _reviver.PakVOFilesAsync();
+            string destinationFolderPath = Path.Combine(VOFileListDst.FolderPath, TextBoxPakName.Text);
+            await Packer.PackAsync(destinationFolderPath);
             TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
                 "MainWindow.TextBlockProgess.PakSuccess.Text");
         }

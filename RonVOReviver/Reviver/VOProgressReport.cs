@@ -1,9 +1,10 @@
-﻿namespace RonVOReviver.Reviver;
+namespace RonVOReviver.Reviver;
 
 public enum VOProgressType
 {
     FileCopied,
     ExtraVOType,
+    MissingVOType,
     Error
 }
 
