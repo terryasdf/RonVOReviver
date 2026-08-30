@@ -1,4 +1,4 @@
-using CsvHelper;
+﻿using CsvHelper;
 using CsvHelper.Configuration;
 using NLog;
 using System.Globalization;
@@ -6,7 +6,7 @@ using System.IO;
 
 namespace RonVOReviver.Reviver;
 
-public class SubtitleHandler : IDisposable
+public class SubtitleHandler : IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -20,26 +20,48 @@ public class SubtitleHandler : IDisposable
         public string Context { get; set; }
     }
 
+    private SubtitleHandler() { }
+
     public void Dispose()
     {
         foreach (CsvWriter writer in _writers.Values)
         {
+            writer.Flush();
             writer.Dispose();
         }
+        _writers.Clear();
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        foreach (CsvWriter writer in _writers.Values)
+        {
+            await writer.FlushAsync();
+            await writer.DisposeAsync();
+        }
+        _writers.Clear();
         GC.SuppressFinalize(this);
     }
 
     /// <summary>
-    /// Loads all old subtitles into dictionary and opens a <see cref="CsvWriter"/> for each language.
+    /// Loads all old subtitles asynchronously into dictionary and opens a <see cref="CsvWriter"/> for each language.
     /// </summary>
     /// <param name="oldSubtitleFolderPath">The folder path for old files</param>
     /// <param name="outputFolderPath">The folder path for generated files</param>
-    public SubtitleHandler(string oldSubtitleFolderPath, string outputFolderPath,
-        IProgress<VOProgressReport>? progress = null)
+    /// <param name="progress">Progress report callback</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public static async Task<SubtitleHandler> CreateAsync(
+        string oldSubtitleFolderPath,
+        string outputFolderPath,
+        IProgress<VOProgressReport>? progress = null,
+        CancellationToken cancellationToken = default)
     {
+        SubtitleHandler handler = new();
         string[] files = Directory.GetFiles(oldSubtitleFolderPath, "sub_*.csv");
         foreach (string file in files)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             string fileName = Path.GetFileName(file).ToLower();
             try
             {
@@ -58,10 +80,10 @@ public class SubtitleHandler : IDisposable
                 using CsvReader csvReader = new(sr, csvConfig);
 
                 // Skip the header row
-                csvReader.Read();
+                await csvReader.ReadAsync();
                 csvReader.ReadHeader();
                 Dictionary<string, string> dict = [];
-                while (csvReader.Read())
+                while (await csvReader.ReadAsync())
                 {
                     try
                     {
@@ -88,10 +110,10 @@ public class SubtitleHandler : IDisposable
 
                 StreamWriter sw = new($"{outputFolderPath}\\{fileName}");
                 CsvWriter csvWriter = new(sw, CultureInfo.InvariantCulture);
-                _writers[fileName] = csvWriter;
+                handler._writers[fileName] = csvWriter;
                 csvWriter.WriteHeader<Record>();
                 csvWriter.NextRecord();
-                _subtitles[fileName] = dict;
+                handler._subtitles[fileName] = dict;
 
                 Logger.Debug($"Read subtitle file: {file}");
             }
@@ -111,6 +133,7 @@ public class SubtitleHandler : IDisposable
                 Logger.Error($"Failed to read subtitle file: {file}\n{e.Message}");
             }
         }
+        return handler;
     }
 
     /// <summary>

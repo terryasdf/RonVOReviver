@@ -1,4 +1,4 @@
-using NLog;
+﻿using NLog;
 using System.Diagnostics;
 using System.IO;
 

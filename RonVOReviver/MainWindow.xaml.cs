@@ -1,4 +1,4 @@
-using NLog;
+﻿using NLog;
 using RonVOReviver.Reviver;
 using System.Diagnostics;
 using System.IO;
@@ -235,7 +235,7 @@ public partial class MainWindow : Window
                 }
             });
 
-            await reviver.CopyVOFiles(progress);
+            await reviver.CopyVOFilesAsync(progress);
             if (FailedFiles.Count > 0)
             {
                 string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";

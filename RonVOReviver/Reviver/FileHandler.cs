@@ -64,9 +64,11 @@ public class FileHandler
         return dstFiles;
     }
 
-    public static void Copy(string srcFile, string dstFile)
+    public static async Task CopyAsync(string srcFile, string dstFile, CancellationToken cancellationToken = default)
     {
-        File.Copy(srcFile, dstFile);
+        using FileStream sourceStream = new(srcFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true);
+        using FileStream destinationStream = new(dstFile, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true);
+        await sourceStream.CopyToAsync(destinationStream, cancellationToken);
         Logger.Debug($"Copied \"{srcFile}\" as \"{dstFile}\"");
     }
 }
