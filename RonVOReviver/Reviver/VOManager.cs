@@ -17,7 +17,7 @@ public class VOManager
     {
         string[] components = Path.GetFileName(file).Split('_');
         Array.Resize(ref components, components.Length - 1);
-        return string.Join("_", components);
+        return string.Join("_", components).ToLower();
     }
 
     public static string GetVOType(string file, out string index)
@@ -25,7 +25,7 @@ public class VOManager
         string[] components = Path.GetFileName(file).Split('_');
         index = components.Last().Split('.')[0];
         Array.Resize(ref components, components.Length - 1);
-        return string.Join("_", components);
+        return string.Join("_", components).ToLower();
     }
 
     public Dictionary<string, List<string>>.KeyCollection GetVOTypes() => _voFilesMap.Keys;
@@ -56,9 +56,7 @@ public class VOManager
         _voFilesMap = [];
         for (int i = 0; i < filesArray.Length; ++i)
         {
-            // Pak contents are not case-sensitive.
-            filesArray[i] = filesArray[i].ToLower();
-            string voType = GetVOType(filesArray[i], out string index);
+            string voType = GetVOType(filesArray[i]);
             Logger.Debug($"Found VO under folder: {voType}, file={filesArray[i]}");
 
             if (!_voFilesMap.TryGetValue(voType, out List<string>? files))
