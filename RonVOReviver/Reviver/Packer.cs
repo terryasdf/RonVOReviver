@@ -1,4 +1,4 @@
-﻿using NLog;
+using NLog;
 using System.Diagnostics;
 using System.IO;
 
@@ -13,7 +13,7 @@ public static class Packer
 
     private static void OpenExplorer(string path)
     {
-        ProcessStartInfo processInfo = new("explorer", $"\"{path}\"");
+        ProcessStartInfo processInfo = new("explorer.exe", $"/select,\"{path}\"");
         Process.Start(processInfo);
     }
 
@@ -41,7 +41,6 @@ public static class Packer
         await p.WaitForExitAsync();
         Logger.Info($"Paking process finished");
 
-        string? parentDir = Directory.GetParent(pakPath)?.FullName ?? pakPath;
-        OpenExplorer(parentDir);
+        OpenExplorer(pakPath);
     }
 }
