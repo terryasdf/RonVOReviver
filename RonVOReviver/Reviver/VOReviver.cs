@@ -31,6 +31,7 @@ public class VOReviver(
         if (!moddedVOManager.IsOgg)
         {
             moddedVOFiles = await FileHandler.ConvertVOFilesAsync(moddedVOManager.Files, tempFolderPath);
+            numModdedVO = moddedVOFiles.Count;
         }
 
         int nextTypeCur = 0;
@@ -55,11 +56,13 @@ public class VOReviver(
             bool hasOriginal = originalFiles.Count > 0;
 
             int j = i;
-            string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
+            
 
             if (!hasOriginal)
             {
-                progress?.Report(new VOProgressReport(oldKey, VOProgressType.ExtraVOType));
+                progress?.Report(
+                    new VOProgressReport(Path.GetFileNameWithoutExtension(moddedVOFiles[j]),
+                    VOProgressType.ExtraVOType));
                 while (j < nextTypeCur)
                 {
                     Logger.Info($"Extra file: \"{moddedVOFiles[j++]}\"");
@@ -71,6 +74,7 @@ public class VOReviver(
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
                 string newKey = Path.GetFileNameWithoutExtension(originalFile);
                 string dstFile = $"{newVOFolderPath}\\{Path.GetFileName(originalFile)}";
                 try

@@ -27,39 +27,15 @@ public class FileHandler
         ClearDirectory(dstFolder);
         Directory.CreateDirectory(dstFolder);
 
-        List<string> dstFiles = [];
-        int numFiles = files.Count;
-        int i = 0;
-        for (; i + 3 < numFiles; i += 4)
-        {
-            dstFiles.Add($"{dstFolder}\\{Path.GetFileNameWithoutExtension(files[i])}.ogg");
-            dstFiles.Add($"{dstFolder}\\{Path.GetFileNameWithoutExtension(files[i + 1])}.ogg");
-            dstFiles.Add($"{dstFolder}\\{Path.GetFileNameWithoutExtension(files[i + 2])}.ogg");
-            dstFiles.Add($"{dstFolder}\\{Path.GetFileNameWithoutExtension(files[i + 3])}.ogg");
-            Task t1 = AudioConverter.ConvertToOggAsync(files[i], dstFiles[i]);
-            Task t2 = AudioConverter.ConvertToOggAsync(files[i + 1], dstFiles[i + 1]);
-            Task t3 = AudioConverter.ConvertToOggAsync(files[i + 2], dstFiles[i + 2]);
-            Task t4 = AudioConverter.ConvertToOggAsync(files[i + 3], dstFiles[i + 3]);
-            await Task.WhenAll(t1, t2, t3, t4);
-        }
-
-        List<Task> tasks = [];
-        if (i < numFiles)
-        {
-            dstFiles.Add($"{dstFolder}\\{Path.GetFileNameWithoutExtension(files[i])}.ogg");
-            tasks.Add(AudioConverter.ConvertToOggAsync(files[i], dstFiles.Last()));
-        }
-        if (++i < numFiles)
-        {
-            dstFiles.Add($"{dstFolder}\\{Path.GetFileNameWithoutExtension(files[i])}.ogg");
-            tasks.Add(AudioConverter.ConvertToOggAsync(files[i], dstFiles.Last()));
-        }
-        if (++i < numFiles)
-        {
-            dstFiles.Add($"{dstFolder}\\{Path.GetFileNameWithoutExtension(files[i])}.ogg");
-            tasks.Add(AudioConverter.ConvertToOggAsync(files[i], dstFiles.Last()));
-        }
-        await Task.WhenAll(tasks);
+        var dstFiles = Enumerable.Repeat<string>(null, files.Count).ToList();
+        await Parallel.ForEachAsync(Enumerable.Range(0, files.Count),
+            new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+            async (i, ct) =>
+            {
+                string dst = Path.Combine(dstFolder, $"{Path.GetFileNameWithoutExtension(files[i])}.ogg");
+                await AudioConverter.ConvertToOggAsync(files[i], dst);
+                dstFiles[i] = dst;
+            });
 
         return dstFiles;
     }

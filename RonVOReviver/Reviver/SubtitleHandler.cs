@@ -144,7 +144,7 @@ public class SubtitleHandler : IDisposable, IAsyncDisposable
     {
         foreach ((string fileName, CsvWriter writer) in _writers)
         {
-            if (!_subtitles[fileName].TryGetValue(oldKey, out string? dialogue))
+            if (!_subtitles[fileName].TryGetValue(oldKey.ToLower(), out string? dialogue))
             {
                 continue;
             }
