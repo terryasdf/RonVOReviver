@@ -10,8 +10,8 @@ public class VOReviver(
     string character)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private static readonly string BlankOggPath = ".\\blank.ogg";
-    private static readonly string InPakVOPath = "Content\\VO_PC";
+    private static readonly string BlankOggPath = Path.Combine(AppContext.BaseDirectory, "blank.ogg");
+    private static readonly string InPakVOPath = Path.Combine("Content", "VO_PC");
 
     public async Task PakVOFilesAsync() => await Packer.PackAsync(destinationFolderPath);
 
@@ -19,8 +19,8 @@ public class VOReviver(
         CancellationToken cancellationToken = default)
     {
         // Clear destination directory
-        string newVOFolderPath = $"{destinationFolderPath}\\{InPakVOPath}\\{character}";
-        string tempFolderPath = $"{destinationFolderPath}\\temp";
+        string newVOFolderPath = Path.Combine(destinationFolderPath, InPakVOPath, character);
+        string tempFolderPath = Path.Combine(destinationFolderPath, "temp");
         FileHandler.ClearDirectory(destinationFolderPath);
         Directory.CreateDirectory(newVOFolderPath);
 
@@ -76,7 +76,7 @@ public class VOReviver(
 
                 string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
                 string newKey = Path.GetFileNameWithoutExtension(originalFile);
-                string dstFile = $"{newVOFolderPath}\\{Path.GetFileName(originalFile)}";
+                string dstFile = Path.Combine(newVOFolderPath, Path.GetFileName(originalFile));
                 try
                 {
                     await FileHandler.CopyAsync(moddedVOFiles[j], dstFile, cancellationToken);
@@ -113,7 +113,7 @@ public class VOReviver(
             foreach (string originalFile in originalFiles)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                string dstFile = $"{newVOFolderPath}\\{Path.GetFileName(originalFile)}";
+                string dstFile = Path.Combine(newVOFolderPath, Path.GetFileName(originalFile));
                 progress?.Report(new VOProgressReport(Path.GetFileName(originalFile), VOProgressType.MissingVOType));
                 try
                 {

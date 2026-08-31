@@ -27,7 +27,7 @@ public class FileHandler
         ClearDirectory(dstFolder);
         Directory.CreateDirectory(dstFolder);
 
-        var dstFiles = Enumerable.Repeat<string>(null, files.Count).ToList();
+        string[] dstFiles = new string[files.Count];
         await Parallel.ForEachAsync(Enumerable.Range(0, files.Count),
             new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
             async (i, ct) =>
@@ -37,7 +37,7 @@ public class FileHandler
                 dstFiles[i] = dst;
             });
 
-        return dstFiles;
+        return [.. dstFiles];
     }
 
     public static async Task CopyAsync(string srcFile, string dstFile, CancellationToken cancellationToken = default)

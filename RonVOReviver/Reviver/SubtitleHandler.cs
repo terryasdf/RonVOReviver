@@ -107,7 +107,8 @@ public class SubtitleHandler : IDisposable, IAsyncDisposable
                     }
                 }
 
-                StreamWriter sw = new($"{outputFolderPath}\\{fileName}");
+                string outputSubtitleFile = Path.Combine(outputFolderPath, fileName);
+                StreamWriter sw = new(outputSubtitleFile);
                 CsvWriter csvWriter = new(sw, CultureInfo.InvariantCulture);
                 handler._writers[fileName] = csvWriter;
                 csvWriter.WriteHeader<Record>();
@@ -119,7 +120,7 @@ public class SubtitleHandler : IDisposable, IAsyncDisposable
             catch (UnauthorizedAccessException e)
             {
                 progress?.Report(new VOProgressReport(file, VOProgressType.Error));
-                Logger.Error($"Unauthorized access to write new subtitle file: {outputFolderPath}\\{fileName}\n{e.Message}");
+                Logger.Error($"Unauthorized access to write new subtitle file: {Path.Combine(outputFolderPath, fileName)}\n{e.Message}");
             }
             catch (FileFormatException e)
             {

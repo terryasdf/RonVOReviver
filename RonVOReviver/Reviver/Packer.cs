@@ -8,12 +8,12 @@ public static class Packer
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private const string PakDirectory = ".\\paking";
-    private static readonly string PakExecutable = Path.GetFullPath($"{PakDirectory}\\ron_pak.bat");
+    private static readonly string PakDirectory = Path.Combine(AppContext.BaseDirectory, "paking");
+    private static readonly string PakExecutable = Path.Combine(PakDirectory, "ron_pak.bat");
 
     private static void OpenExplorer(string path)
     {
-        ProcessStartInfo? processInfo = new("explorer", $"\"{path}\"");
+        ProcessStartInfo processInfo = new("explorer", $"\"{path}\"");
         Process.Start(processInfo);
     }
 
@@ -25,7 +25,10 @@ public static class Packer
             throw new DirectoryNotFoundException($"The folder does not exist:\n{pakPath}");
         }
 
-        ProcessStartInfo processInfo = new(PakExecutable, $"\"{pakPath}\"");
+        ProcessStartInfo processInfo = new(PakExecutable, $"\"{pakPath}\"")
+        {
+            WorkingDirectory = PakDirectory
+        };
 
         Logger.Info($"Starting paking process: {pakPath}");
 
@@ -38,6 +41,7 @@ public static class Packer
         await p.WaitForExitAsync();
         Logger.Info($"Paking process finished");
 
-        OpenExplorer($"{pakPath}\\..");
+        string? parentDir = Directory.GetParent(pakPath)?.FullName ?? pakPath;
+        OpenExplorer(parentDir);
     }
 }
