@@ -70,7 +70,7 @@ public class VOReviver(
             foreach (string originalFile in originalFiles)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 string newKey = Path.GetFileNameWithoutExtension(originalFile);
                 string dstFile = $"{newVOFolderPath}\\{Path.GetFileName(originalFile)}";
                 try

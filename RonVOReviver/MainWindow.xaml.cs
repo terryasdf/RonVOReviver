@@ -202,8 +202,8 @@ public partial class MainWindow : Window
         CommandManager.InvalidateRequerySuggested();
         VOFileListDst.ClearItems();
 
-        ListBoxExtra.Items.Clear();
-        ListBoxMissing.Items.Clear();
+        VOFileListMissing.ClearItems();
+        VOFileListExtra.ClearItems();
         List<string> FailedFiles = [];
 
         try
@@ -224,10 +224,10 @@ public partial class MainWindow : Window
                         VOFileListDst.AddItem(report.Path);
                         break;
                     case VOProgressType.ExtraVOType:
-                        ListBoxExtra.Items.Add(report.Path);
+                        VOFileListExtra.AddItem(report.Path);
                         break;
                     case VOProgressType.MissingVOType:
-                        ListBoxMissing.Items.Add(report.Path);
+                        VOFileListMissing.AddItem(report.Path);
                         break;
                     case VOProgressType.Error:
                         FailedFiles.Add(report.Path);
