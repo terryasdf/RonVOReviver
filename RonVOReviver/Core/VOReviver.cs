@@ -1,7 +1,9 @@
 ﻿using NLog;
+using RonVOReviver.Models;
+using RonVOReviver.Services;
 using System.IO;
 
-namespace RonVOReviver.Reviver;
+namespace RonVOReviver.Core;
 
 public class VOReviver(
     VOManager originalVOManager,
@@ -10,7 +12,7 @@ public class VOReviver(
     string character)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private static readonly string BlankOggPath = Path.Combine(AppContext.BaseDirectory, "blank.ogg");
+    private static readonly string BlankOggPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Audio", "blank.ogg");
     private static readonly string InPakVOPath = Path.Combine("Content", "VO_PC");
 
     public async Task PakVOFilesAsync() => await Packer.PackAsync(destinationFolderPath);
@@ -56,7 +58,7 @@ public class VOReviver(
             bool hasOriginal = originalFiles.Count > 0;
 
             int j = i;
-            
+
 
             if (!hasOriginal)
             {

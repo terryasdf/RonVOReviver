@@ -1,14 +1,14 @@
-using NLog;
+﻿using NLog;
 using System.Diagnostics;
 using System.IO;
 
-namespace RonVOReviver.Reviver;
+namespace RonVOReviver.Services;
 
 public static class Packer
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private static readonly string PakDirectory = Path.Combine(AppContext.BaseDirectory, "paking");
+    private static readonly string PakDirectory = Path.Combine(AppContext.BaseDirectory, "Tools", "UnrealPak");
     private static readonly string PakExecutable = Path.Combine(PakDirectory, "ron_pak.bat");
 
     private static void OpenExplorer(string path)

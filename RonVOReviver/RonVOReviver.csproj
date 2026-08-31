@@ -26,17 +26,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="blank.ogg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="Assets\Audio\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="paking\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="Tools\UnrealPak\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="vanilla_ogg_lists\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="VanillaVoiceLists\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

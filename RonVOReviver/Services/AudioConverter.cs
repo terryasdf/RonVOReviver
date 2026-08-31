@@ -1,7 +1,7 @@
 ﻿using FFMpegCore;
 using NLog;
 
-namespace RonVOReviver.Reviver;
+namespace RonVOReviver.Services;
 
 public class AudioConverter
 {
