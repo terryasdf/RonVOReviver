@@ -1,5 +1,6 @@
 ﻿using NLog;
 using RonVOReviver.Reviver;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -16,10 +17,8 @@ public partial class MainWindow : Window
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ResourceDictionary DictionaryENUS = [];
     private static readonly ResourceDictionary DictionaryZHCN = [];
-    private const string DefaultPakName = "pakchunk99-RevivedVO";
-    private const string ZFillPreviewVOType = "PreviewVO";
-    private const int ZFillPreviewIndex1 = 1;
-    private const int ZFillPreviewIndex2 = 12;
+    private static readonly string DefaultCharacter = "SWATJudge";
+    private static readonly string DefaultPakName = "pakchunk99-RevivedVO";
     private static readonly string RegexInvalidChars =
         $"[{string.Concat(Path.GetInvalidFileNameChars())} ]";
 
@@ -28,17 +27,19 @@ public partial class MainWindow : Window
     private static string _messageBoxFolderErrorText = string.Empty;
     private static string _messageBoxFileErrorText = string.Empty;
 
-    private readonly VOReviver _reviver = new();
+    private VOManager? _originalVOManager;
+    private ModdedVOManager? _moddedVOManager;
+    private bool _isProcessing = false;
 
     public MainWindow()
     {
         InitializeComponent();
         Title = $"RON VO Reviver (by terryzzz) {Application.ResourceAssembly.GetName().Version}";
         TextBoxPakName.Text = DefaultPakName;
-        UpdateZeroFill();
         DictionaryENUS.Source = new Uri("Languages/en-us.xaml", UriKind.Relative);
         DictionaryZHCN.Source = new Uri("Languages/zh-cn.xaml", UriKind.Relative);
         ResetDynamicResourcesMessageTexts();
+        PopulateOriginalCharacters();
     }
 
     private static void ResetDynamicResourcesMessageTexts()
@@ -53,13 +54,6 @@ public partial class MainWindow : Window
             Resources["MainWindow.MessageBoxFileError.Text"];
     }
 
-    private void UpdateZeroFill()
-    {
-        _reviver.ZeroFillLength = NumericUpDownZFill.Value;
-        TextBlockZFillPreview1.Text = $"{ZFillPreviewVOType}_{_reviver.ZeroFill(ZFillPreviewIndex1)}.ogg";
-        TextBlockZFillPreview2.Text = $"{ZFillPreviewVOType}_{_reviver.ZeroFill(ZFillPreviewIndex2)}.ogg";
-    }
-
     public static void ShowErrorMessageBox(string text)
     {
         MessageBox.Show(text, _messageBoxErrorCaption, MessageBoxButton.OK,
@@ -72,42 +66,96 @@ public partial class MainWindow : Window
             MessageBoxImage.Warning);
     }
 
-    private void VOFileListOriginal_FolderSelect(object sender, RoutedEventArgs e)
+    private static string GetOriginalOggListsDirectory()
     {
-        Logger.Info($"Original VO Folder chosen: {VOFileListOriginal.FolderPath}");
-        VOFileListOriginal.IsEnabled = false;
+        return Path.Combine(AppContext.BaseDirectory, "vanilla_ogg_lists");
+    }
+
+    private void PopulateOriginalCharacters()
+    {
+        string originalOggDir = GetOriginalOggListsDirectory();
+        if (!Directory.Exists(originalOggDir))
+        {
+            Logger.Warn($"Original OGG lists directory not found: {originalOggDir}");
+            return;
+        }
+
+        var characterFiles = Directory.GetFiles(originalOggDir, "*.txt")
+            .Where(f => new FileInfo(f).Length > 0)
+            .Select(f => Path.GetFileNameWithoutExtension(f))
+            .OrderBy(c => c, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        VOFileListOriginal.Characters = characterFiles;
+
+        if (characterFiles.Contains(DefaultCharacter))
+        {
+            VOFileListOriginal.SelectedCharacter = DefaultCharacter;
+        }
+        else if (characterFiles.Count > 0)
+        {
+            VOFileListOriginal.SelectedCharacter = characterFiles[0];
+        }
+    }
+
+    private void VOFileListOriginal_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        string selectedCharacter = VOFileListOriginal.SelectedCharacter;
+        if (string.IsNullOrWhiteSpace(selectedCharacter))
+        {
+            return;
+        }
+
+        LoadOriginalCharacter(selectedCharacter);
+    }
+
+    private void LoadOriginalCharacter(string character)
+    {
+        string txtPath = Path.Combine(GetOriginalOggListsDirectory(), $"{character}.txt");
+        if (!File.Exists(txtPath))
+        {
+            return;
+        }
+
+        Logger.Info($"Original character chosen: {character} ({txtPath})");
         VOFileListOriginal.ClearItems();
+        _originalVOManager = null;
 
         List<string> skippedVOFiles = [];
         try
         {
-            _reviver.SetOriginalVOFolderPath(VOFileListOriginal.FolderPath,
-                (path) => VOFileListOriginal.AddItem(path),
-                (path) => skippedVOFiles.Add(path));
+            var progress = new Progress<VOManagerProgressReport>(report =>
+            {
+                switch (report.Type)
+                {
+                    case VOManagerProgressType.Success:
+                        VOFileListOriginal.AddItem(report.Path);
+                        break;
+                    case VOManagerProgressType.FormatError:
+                        skippedVOFiles.Add(report.Path);
+                        break;
+                }
+            });
+            _originalVOManager = new OriginalVOManager(txtPath, progress);
 
             if (skippedVOFiles.Count > 0)
             {
-                string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
+                string message = $"{_messageBoxFormatExceptionText}\n{string.Join("\n", skippedVOFiles)}";
                 ShowWarningMessageBox(message);
             }
 
-            VOFileListOriginal.IsEnabled = true;
-            NumericUpDownZFill.Value = _reviver.ZeroFillLength;
-            TextBoxCharacter.Text = System.IO.Path.GetFileName(VOFileListOriginal.FolderPath);
+            TextBoxCharacter.Text = character;
             TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
                 "MainWindow.TextBlockProgess.LoadedOriginal.Text");
         }
-        catch (UnauthorizedAccessException ex)
+        catch (Exception ex)
         {
-            VOFileListOriginal.FolderPath = string.Empty;
-            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+            string message = $"{_messageBoxFileErrorText}\n{ex.Message}";
             ShowErrorMessageBox(message);
         }
-        catch (IOException ex)
+        finally
         {
-            VOFileListOriginal.FolderPath = string.Empty;
-            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowErrorMessageBox(message);
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
@@ -116,14 +164,24 @@ public partial class MainWindow : Window
         Logger.Info($"Modded VO Folder chosen: {VOFileListModded.FolderPath}");
         VOFileListModded.IsEnabled = false;
         VOFileListModded.ClearItems();
+        _moddedVOManager = null;
 
         List<string> skippedVOFiles = [];
-        List<string> failedSubtitles = [];
         try
         {
-            _reviver.SetModdedVOFolderPath(VOFileListModded.FolderPath,
-                (path) => VOFileListModded.AddItem(path),
-                (path) => skippedVOFiles.Add(path));
+            var progress = new Progress<VOManagerProgressReport>(report =>
+            {
+                switch (report.Type)
+                {
+                    case VOManagerProgressType.Success:
+                        VOFileListModded.AddItem(report.Path);
+                        break;
+                    case VOManagerProgressType.FormatError:
+                        skippedVOFiles.Add(report.Path);
+                        break;
+                }
+            });
+            _moddedVOManager = new ModdedVOManager(VOFileListModded.FolderPath, progress);
 
             if (skippedVOFiles.Count > 0)
             {
@@ -152,37 +210,22 @@ public partial class MainWindow : Window
     private void TextBoxPakName_TextChanged(object sender, TextChangedEventArgs e)
     {
         TextBoxPakName.Text = Regex.Replace(TextBoxPakName.Text, RegexInvalidChars, string.Empty);
-        _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
     }
 
     private void TextBoxCharacter_TextChanged(object sender, TextChangedEventArgs e)
     {
         TextBoxCharacter.Text = Regex.Replace(TextBoxCharacter.Text, RegexInvalidChars, string.Empty);
-        _reviver.Character = TextBoxCharacter.Text;
-    }
-
-    private void VOFileListDst_FolderSelect(object sender, RoutedEventArgs e)
-    {
-        _reviver.SetDestionationFolderPath($"{VOFileListDst.FolderPath}\\{TextBoxPakName.Text}");
-    }
-
-    private void ZFillUpdateCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = true;
-    }
-
-    private void ZFillUpdateCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-    {
-        UpdateZeroFill();
     }
 
     private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        if (VOFileListOriginal.FolderPath.Equals(string.Empty) ||
-            VOFileListModded.FolderPath.Equals(string.Empty) ||
-            VOFileListDst.FolderPath.Equals(string.Empty) ||
-            TextBoxPakName.Text.Equals(string.Empty) ||
-            TextBoxCharacter.Text.Equals(string.Empty))
+        if (_isProcessing ||
+            _originalVOManager == null ||
+            _moddedVOManager == null ||
+            string.IsNullOrEmpty(VOFileListModded.FolderPath) ||
+            string.IsNullOrEmpty(VOFileListDst.FolderPath) ||
+            string.IsNullOrEmpty(TextBoxPakName.Text) ||
+            string.IsNullOrEmpty(TextBoxCharacter.Text))
         {
             e.CanExecute = false;
             return;
@@ -190,31 +233,63 @@ public partial class MainWindow : Window
         e.CanExecute = true;
     }
 
-    private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    private async void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
     {
+        if (_originalVOManager == null || _moddedVOManager == null)
+        {
+            return;
+        }
+
+        Debug.Assert(!String.IsNullOrEmpty(VOFileListDst.FolderPath));
+        Debug.Assert(!String.IsNullOrEmpty(TextBoxPakName.Text));
+
+        _isProcessing = true;
+        CommandManager.InvalidateRequerySuggested();
         VOFileListDst.ClearItems();
 
-        ListBoxExtra.Items.Clear();
+        VOFileListMissing.ClearItems();
+        VOFileListExtra.ClearItems();
         List<string> FailedFiles = [];
+
         try
         {
-            _reviver.CopyVOFiles(out List<string> missingVOTypes,
-                (path) => ListBoxExtra.Items.Add(path),
-                (path) =>
-                {
-                    TextBlockProgress.Text = path;
-                    VOFileListDst.AddItem(path);
-                },
-                (path) => FailedFiles.Add(path));
+            string destinationFolderPath = Path.Combine(VOFileListDst.FolderPath, TextBoxPakName.Text);
+            VOReviver reviver = new(
+                _originalVOManager,
+                _moddedVOManager,
+                destinationFolderPath,
+                TextBoxCharacter.Text);
 
-            ListBoxMissing.ItemsSource = missingVOTypes;
+            var progress = new Progress<VOProgressReport>(report =>
+            {
+                switch (report.Type)
+                {
+                    case VOProgressType.FileCopied:
+                        TextBlockProgress.Text = report.Path;
+                        VOFileListDst.AddItem(report.Path);
+                        break;
+                    case VOProgressType.ExtraVOType:
+                        VOFileListExtra.AddItem(report.Path);
+                        break;
+                    case VOProgressType.MissingVOType:
+                        VOFileListMissing.AddItem(report.Path);
+                        break;
+                    case VOProgressType.Error:
+                        FailedFiles.Add(report.Path);
+                        break;
+                }
+            });
+
+            await reviver.CopyVOFilesAsync(progress);
             if (FailedFiles.Count > 0)
             {
                 string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
                 ShowWarningMessageBox(message);
             }
 
-            _reviver.PakVOFiles();
+            await reviver.PakVOFilesAsync();
+            TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
+                "MainWindow.TextBlockProgess.PakSuccess.Text");
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -228,23 +303,40 @@ public partial class MainWindow : Window
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
             ShowErrorMessageBox(message);
         }
+        finally
+        {
+            _isProcessing = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     private void SaveCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        e.CanExecute = !VOFileListDst.FolderPath.Equals(string.Empty);
+        e.CanExecute = !_isProcessing &&
+            !String.IsNullOrEmpty(VOFileListDst.FolderPath) &&
+            !String.IsNullOrEmpty(TextBoxPakName.Text);
     }
 
-    private void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    private async void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
     {
+        _isProcessing = true;
+        CommandManager.InvalidateRequerySuggested();
         try
         {
-            _reviver.PakVOFiles();
+            string destinationFolderPath = Path.Combine(VOFileListDst.FolderPath, TextBoxPakName.Text);
+            await Packer.PackAsync(destinationFolderPath);
+            TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
+                "MainWindow.TextBlockProgess.PakSuccess.Text");
         }
         catch (DirectoryNotFoundException ex)
         {
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
             ShowErrorMessageBox(message);
+        }
+        finally
+        {
+            _isProcessing = false;
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
@@ -263,10 +355,4 @@ public partial class MainWindow : Window
     }
 
     #endregion
-}
-
-public static class NumericUpDownZFillCommands
-{
-    public static readonly RoutedUICommand Update = new(
-        "Update", "Update", typeof(NumericUpDownZFillCommands));
 }

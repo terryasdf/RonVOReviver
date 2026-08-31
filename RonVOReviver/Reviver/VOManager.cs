@@ -3,89 +3,80 @@ using System.IO;
 
 namespace RonVOReviver.Reviver;
 
-public delegate void Callback(string path);
-
 public class VOManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly Dictionary<string, List<int>> _voIndicesMap = [];
+    private readonly Dictionary<string, List<string>> _voFilesMap = [];
+    private readonly List<string> _files = [];
 
     public string FolderPath { get; protected set; } = string.Empty;
-    public List<string> Files { get; } = [];
-    public int ZeroFillLength { get; set; } = 4;
+    public IReadOnlyList<string> Files { get => _files; }
 
-    /// <summary>
-    /// Dummy constructor.
-    /// </summary>
-    public VOManager() { }
-
-    public static string GetVOType(string file, out string strIndex)
+    public static string GetVOType(string file)
     {
         string[] components = Path.GetFileName(file).Split('_');
-        strIndex = components.Last().Split('.')[0];
         Array.Resize(ref components, components.Length - 1);
-        return string.Join("_", components);
+        return string.Join("_", components).ToLower();
     }
 
-    public Dictionary<string, List<int>>.KeyCollection GetVOTypes() => _voIndicesMap.Keys;
-
-    public bool HasVOType(string voType) => _voIndicesMap.ContainsKey(voType);
-
-    public int GetMaxIndex(string voType)
+    public static string GetVOType(string file, out string index)
     {
-        return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices.Max() : 0;
+        string[] components = Path.GetFileName(file).Split('_');
+        index = components.Last().Split('.')[0];
+        Array.Resize(ref components, components.Length - 1);
+        return string.Join("_", components).ToLower();
     }
 
-    public int GetCount(string voType)
+    public Dictionary<string, List<string>>.KeyCollection GetVOTypes() => _voFilesMap.Keys;
+
+    public bool HasVOType(string voType) => _voFilesMap.ContainsKey(voType);
+
+    public IReadOnlyList<string> GetFiles(string voType)
     {
-        return _voIndicesMap.TryGetValue(voType, out List<int>? indices) ? indices.Count : 0;
+        return _voFilesMap.TryGetValue(voType, out List<string>? files) ? files : [];
+    }
+
+    public virtual string[] GetVOFiles()
+    {
+        return Directory.GetFiles(FolderPath, "*.ogg");
     }
 
     /// <summary>
     /// Reads from <paramref name="path"/> and counts types of VO files.
     /// </summary>
     /// <param name="path">The character folder (e.g. SWATJudge)</param>
-    /// <param name="progressCallback">
-    /// Called upon reading each successful VO file
+    /// <param name="progress">
+    /// Called upon reading each VO file (reporting success or format error)
     /// </param>
-    /// <param name="onFormatExceptionCallback">
-    /// Called upon unintended naming format (should be like XXXX_1.ogg)
-    /// </param>
-    public VOManager(string path, Callback progressCallback, Callback onFormatExceptionCallback)
+    public VOManager(string path, IProgress<VOManagerProgressReport>? progress = null)
     {
-        string[] filesArray = Directory.GetFiles(path, "*.ogg");
-        _voIndicesMap = [];
+        FolderPath = path;
+        string[] filesArray = GetVOFiles();
+        _voFilesMap = [];
         for (int i = 0; i < filesArray.Length; ++i)
         {
-            // Pak contents are not case-sensitive.
-            filesArray[i] = filesArray[i].ToLower();
-            string voType = GetVOType(filesArray[i], out string id);
-            Logger.Debug($"Found .ogg under folder: {voType}, id={id}");
+            string voType = GetVOType(filesArray[i]);
+            Logger.Debug($"Found VO under folder: {voType}, file={filesArray[i]}");
 
-            if (!_voIndicesMap.TryGetValue(voType, out List<int>? indices))
+            if (!_voFilesMap.TryGetValue(voType, out List<string>? files))
             {
-                indices = [];
+                files = [];
             }
 
             try
             {
-                indices.Add(int.Parse(id));
-                Files.Add(filesArray[i]);
-                _voIndicesMap[voType] = indices;
-                if (ZeroFillLength > id.Length)
-                {
-                    ZeroFillLength = id.Length;
-                }
-                progressCallback(filesArray[i]);
+                files.Add(filesArray[i]);
+                _files.Add(filesArray[i]);
+                _voFilesMap[voType] = files;
+                progress?.Report(new VOManagerProgressReport(filesArray[i], VOManagerProgressType.Success));
             }
             catch (FormatException e)
             {
                 Logger.Error($"Parsing failed at {filesArray[i]}: {e.Message}");
-                onFormatExceptionCallback(filesArray[i]);
+                progress?.Report(new VOManagerProgressReport(filesArray[i], VOManagerProgressType.FormatError));
             }
         }
-        Files.Sort();
-        FolderPath = path;
+        _files.Sort();
     }
 }

@@ -1,124 +1,138 @@
 ﻿using NLog;
-using System.Diagnostics;
 using System.IO;
 
 namespace RonVOReviver.Reviver;
 
-public class VOReviver
+public class VOReviver(
+    VOManager originalVOManager,
+    ModdedVOManager moddedVOManager,
+    string destinationFolderPath,
+    string character)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private static readonly string InPakVOPath = "Content\\VO_PC";
+    private static readonly string BlankOggPath = Path.Combine(AppContext.BaseDirectory, "blank.ogg");
+    private static readonly string InPakVOPath = Path.Combine("Content", "VO_PC");
 
-    private VOManager _originalVOManager = new();
-    private VOManager _moddedVOManager = new();
+    public async Task PakVOFilesAsync() => await Packer.PackAsync(destinationFolderPath);
 
-    private string _destinationFolderPath = string.Empty;
-
-    public int ZeroFillLength { get; set; } = 1;
-    public string Character { get; set; } = string.Empty;
-
-    public string ZeroFill(int x) => x.ToString($"D{ZeroFillLength}");
-
-    public void SetOriginalVOFolderPath(string path, Callback progressCallback,
-        Callback onFormatExceptionCallback)
+    public async Task CopyVOFilesAsync(IProgress<VOProgressReport>? progress = null,
+        CancellationToken cancellationToken = default)
     {
-        _originalVOManager = new(path, progressCallback, onFormatExceptionCallback);
-        ZeroFillLength = _originalVOManager.ZeroFillLength;
-        Character = Path.GetFileName(path);
-    }
-
-    public void SetModdedVOFolderPath(string path, Callback progressCallback,
-        Callback onFormatExceptionCallback)
-    {
-        _moddedVOManager = new(path, progressCallback, onFormatExceptionCallback);
-    }
-
-    public void SetDestionationFolderPath(string path) => _destinationFolderPath = path;
-
-    public void PakVOFiles() => Packer.Pack(_destinationFolderPath);
-
-    public void CopyVOFiles(out List<string> missingVOTypes,
-        Callback extraVOTypeFileCallback, Callback progressCallback,
-        Callback onIOExceptionCallback)
-    {
-        missingVOTypes = [];
-
         // Clear destination directory
-        string newVOFolderPath = $"{_destinationFolderPath}\\{InPakVOPath}\\{Character}";
-        if (Directory.Exists(_destinationFolderPath))
-        {
-            Directory.Delete(_destinationFolderPath, true);
-            Logger.Debug($"Deleted folder: {_destinationFolderPath}");
-        }
+        string newVOFolderPath = Path.Combine(destinationFolderPath, InPakVOPath, character);
+        string tempFolderPath = Path.Combine(destinationFolderPath, "temp");
+        FileHandler.ClearDirectory(destinationFolderPath);
         Directory.CreateDirectory(newVOFolderPath);
 
-        int nextTypeCur = 0;
-        int numModdedVO = _moddedVOManager.Files.Count;
-        string[] moddedVOFiles = [.. _moddedVOManager.Files];
+        int numModdedVO = moddedVOManager.Files.Count;
+        var moddedVOFiles = moddedVOManager.Files;
 
-        using SubtitleHandler subtitleHandler = new(_moddedVOManager.FolderPath,
-            newVOFolderPath, onIOExceptionCallback);
+        // Convert audio format and save to a temp folder if necessary
+        if (!moddedVOManager.IsOgg)
+        {
+            moddedVOFiles = await FileHandler.ConvertVOFilesAsync(moddedVOManager.Files, tempFolderPath);
+            numModdedVO = moddedVOFiles.Count;
+        }
+
+        int nextTypeCur = 0;
+        await using SubtitleHandler subtitleHandler = await SubtitleHandler.CreateAsync(
+            moddedVOManager.FolderPath,
+            newVOFolderPath,
+            progress,
+            cancellationToken);
 
         for (int i = 0; i < numModdedVO; i = nextTypeCur)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             // Find all files of one voType
-            string voType = VOManager.GetVOType(moddedVOFiles[i], out string _);
+            string voType = VOManager.GetVOType(moddedVOFiles[i]);
             while (nextTypeCur < numModdedVO &&
-                VOManager.GetVOType(moddedVOFiles[nextTypeCur], out string _).Equals(voType))
+                VOManager.GetVOType(moddedVOFiles[nextTypeCur]).Equals(voType))
             {
                 ++nextTypeCur;
             }
 
-            int numOriginal = _originalVOManager.GetMaxIndex(voType);
-            int numModded = _moddedVOManager.GetCount(voType);
+            var originalFiles = originalVOManager.GetFiles(voType);
+            bool hasOriginal = originalFiles.Count > 0;
 
-            Debug.Assert(numModded > 0);
-            // Times of reusing modded files to fully replace original files:
-            // Ceil{(numOriginal + 1) / numModded}
-            int numRepeat = (numOriginal + numModded) / numModded;
+            int j = i;
+            
 
-            // Copy files for numRepeat times
-            int index = 0;
-            while (numRepeat-- > 0)
+            if (!hasOriginal)
             {
-                for (int j = i; j < nextTypeCur; ++j)
+                progress?.Report(
+                    new VOProgressReport(Path.GetFileNameWithoutExtension(moddedVOFiles[j]),
+                    VOProgressType.ExtraVOType));
+                while (j < nextTypeCur)
                 {
-                    string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
-                    string newKey = $"{voType}_{ZeroFill(index++)}";
-                    string dstFile = $"{newVOFolderPath}\\{newKey}.ogg";
-                    try
-                    {
-                        File.Copy(moddedVOFiles[j], dstFile);
-                        Logger.Debug($"Copied \"{moddedVOFiles[j]}\" as \"{dstFile}\"");
-                        if (numOriginal == 0)
-                        {
-                            extraVOTypeFileCallback(moddedVOFiles[j]);
-                            Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
-                        }
-                        progressCallback(dstFile);
-                        subtitleHandler.WriteLine(oldKey, newKey);
-                    }
-                    catch (UnauthorizedAccessException e)
-                    {
-                        onIOExceptionCallback(moddedVOFiles[j]);
-                        Logger.Error($"Failed to copy due to unauthorized access: " +
-                            $"{moddedVOFiles[j]}\n{e.Message}");
-                    }
-                    catch (IOException e)
-                    {
-                        onIOExceptionCallback(moddedVOFiles[j]);
-                        Logger.Error($"Failed to copy: {moddedVOFiles[j]}\n{e.Message}");
-                    }
+                    Logger.Info($"Extra file: \"{moddedVOFiles[j++]}\"");
+                }
+                continue;
+            }
+
+            foreach (string originalFile in originalFiles)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
+                string newKey = Path.GetFileNameWithoutExtension(originalFile);
+                string dstFile = Path.Combine(newVOFolderPath, Path.GetFileName(originalFile));
+                try
+                {
+                    await FileHandler.CopyAsync(moddedVOFiles[j], dstFile, cancellationToken);
+                    progress?.Report(new VOProgressReport(dstFile, VOProgressType.FileCopied));
+                    subtitleHandler.WriteLine(oldKey, newKey);
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    progress?.Report(new VOProgressReport(moddedVOFiles[j], VOProgressType.Error));
+                    Logger.Error($"Failed to copy due to unauthorized access: " +
+                        $"{moddedVOFiles[j]}\n{e.Message}");
+                }
+                catch (IOException e)
+                {
+                    progress?.Report(new VOProgressReport(moddedVOFiles[j], VOProgressType.Error));
+                    Logger.Error($"Failed to copy: {moddedVOFiles[j]}\n{e.Message}");
+                }
+
+                if (++j == nextTypeCur)
+                {
+                    j = i;
                 }
             }
         }
 
-        foreach (string voType in _originalVOManager.GetVOTypes())
+        foreach (string voType in originalVOManager.GetVOTypes())
         {
-            if (!_moddedVOManager.HasVOType(voType))
+            if (moddedVOManager.HasVOType(voType))
             {
-                missingVOTypes.Add(voType);
+                continue;
+            }
+
+            var originalFiles = originalVOManager.GetFiles(voType);
+            foreach (string originalFile in originalFiles)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string dstFile = Path.Combine(newVOFolderPath, Path.GetFileName(originalFile));
+                progress?.Report(new VOProgressReport(Path.GetFileName(originalFile), VOProgressType.MissingVOType));
+                try
+                {
+                    await FileHandler.CopyAsync(BlankOggPath, dstFile, cancellationToken);
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    progress?.Report(new VOProgressReport(BlankOggPath, VOProgressType.Error));
+                    Logger.Error($"Failed to copy due to unauthorized access: " +
+                        $"{BlankOggPath}\n{e.Message}");
+                }
+                catch (IOException e)
+                {
+                    progress?.Report(new VOProgressReport(BlankOggPath, VOProgressType.Error));
+                    Logger.Error($"Failed to copy: {BlankOggPath}\n{e.Message}");
+                }
             }
         }
+
+        FileHandler.ClearDirectory(tempFolderPath);
     }
 }

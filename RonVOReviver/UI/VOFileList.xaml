@@ -7,9 +7,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">
-    <Grid Margin="5,2,5,2">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -21,7 +20,6 @@
             <TextBlock TextWrapping="Wrap" Text="{Binding Title}"/>
             <TextBlock x:Name="TextBlockItemCount" TextWrapping="Wrap" Grid.Column="1"/>
         </Grid>
-        <ui:FolderSelector x:Name="FolderSelector" Select="FolderSelector_Select" Grid.Row="1"/>
-        <ListBox x:Name="ItemList" Grid.Row="2"/>
+        <ListBox x:Name="ItemList" Grid.Row="1"/>
     </Grid>
 </UserControl>

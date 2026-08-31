@@ -23,7 +23,7 @@ namespace RonVOReviver.UI
         }
 
         public static readonly DependencyProperty FolderPathProperty = DependencyProperty.Register(
-            "FolderPath", typeof(string), typeof(VOFileList));
+            "FolderPath", typeof(string), typeof(FolderSelector));
 
         public string FolderPath
         {
