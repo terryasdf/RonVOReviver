@@ -17,7 +17,8 @@ public partial class MainWindow : Window
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ResourceDictionary DictionaryENUS = [];
     private static readonly ResourceDictionary DictionaryZHCN = [];
-    private const string DefaultPakName = "pakchunk99-RevivedVO";
+    private static readonly string DefaultCharacter = "SWATJudge";
+    private static readonly string DefaultPakName = "pakchunk99-RevivedVO";
     private static readonly string RegexInvalidChars =
         $"[{string.Concat(Path.GetInvalidFileNameChars())} ]";
 
@@ -38,6 +39,7 @@ public partial class MainWindow : Window
         DictionaryENUS.Source = new Uri("Languages/en-us.xaml", UriKind.Relative);
         DictionaryZHCN.Source = new Uri("Languages/zh-cn.xaml", UriKind.Relative);
         ResetDynamicResourcesMessageTexts();
+        PopulateOriginalCharacters();
     }
 
     private static void ResetDynamicResourcesMessageTexts()
@@ -64,10 +66,58 @@ public partial class MainWindow : Window
             MessageBoxImage.Warning);
     }
 
-    private void VOFileListOriginal_FolderSelect(object sender, RoutedEventArgs e)
+    private static string GetOriginalOggListsDirectory()
     {
-        Logger.Info($"Original VO Folder chosen: {VOFileListOriginal.FolderPath}");
-        VOFileListOriginal.IsEnabled = false;
+        return Path.Combine(AppContext.BaseDirectory, "vanilla_ogg_lists");
+    }
+
+    private void PopulateOriginalCharacters()
+    {
+        string originalOggDir = GetOriginalOggListsDirectory();
+        if (!Directory.Exists(originalOggDir))
+        {
+            Logger.Warn($"Original OGG lists directory not found: {originalOggDir}");
+            return;
+        }
+
+        var characterFiles = Directory.GetFiles(originalOggDir, "*.txt")
+            .Where(f => new FileInfo(f).Length > 0)
+            .Select(f => Path.GetFileNameWithoutExtension(f))
+            .OrderBy(c => c, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        VOFileListOriginal.Characters = characterFiles;
+
+        if (characterFiles.Contains(DefaultCharacter))
+        {
+            VOFileListOriginal.SelectedCharacter = DefaultCharacter;
+        }
+        else if (characterFiles.Count > 0)
+        {
+            VOFileListOriginal.SelectedCharacter = characterFiles[0];
+        }
+    }
+
+    private void VOFileListOriginal_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        string selectedCharacter = VOFileListOriginal.SelectedCharacter;
+        if (string.IsNullOrWhiteSpace(selectedCharacter))
+        {
+            return;
+        }
+
+        LoadOriginalCharacter(selectedCharacter);
+    }
+
+    private void LoadOriginalCharacter(string character)
+    {
+        string txtPath = Path.Combine(GetOriginalOggListsDirectory(), $"{character}.txt");
+        if (!File.Exists(txtPath))
+        {
+            return;
+        }
+
+        Logger.Info($"Original character chosen: {character} ({txtPath})");
         VOFileListOriginal.ClearItems();
         _originalVOManager = null;
 
@@ -86,30 +136,26 @@ public partial class MainWindow : Window
                         break;
                 }
             });
-            _originalVOManager = new VOManager(VOFileListOriginal.FolderPath, progress);
+            _originalVOManager = new OriginalVOManager(txtPath, progress);
 
             if (skippedVOFiles.Count > 0)
             {
-                string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
+                string message = $"{_messageBoxFormatExceptionText}\n{string.Join("\n", skippedVOFiles)}";
                 ShowWarningMessageBox(message);
             }
 
-            VOFileListOriginal.IsEnabled = true;
-            TextBoxCharacter.Text = System.IO.Path.GetFileName(VOFileListOriginal.FolderPath);
+            TextBoxCharacter.Text = character;
             TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
                 "MainWindow.TextBlockProgess.LoadedOriginal.Text");
         }
-        catch (UnauthorizedAccessException ex)
+        catch (Exception ex)
         {
-            VOFileListOriginal.FolderPath = string.Empty;
-            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
+            string message = $"{_messageBoxFileErrorText}\n{ex.Message}";
             ShowErrorMessageBox(message);
         }
-        catch (IOException ex)
+        finally
         {
-            VOFileListOriginal.FolderPath = string.Empty;
-            string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
-            ShowErrorMessageBox(message);
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
@@ -176,11 +222,10 @@ public partial class MainWindow : Window
         if (_isProcessing ||
             _originalVOManager == null ||
             _moddedVOManager == null ||
-            String.IsNullOrEmpty(VOFileListOriginal.FolderPath) ||
-            String.IsNullOrEmpty(VOFileListModded.FolderPath) ||
-            String.IsNullOrEmpty(VOFileListDst.FolderPath) ||
-            String.IsNullOrEmpty(TextBoxPakName.Text) ||
-            String.IsNullOrEmpty(TextBoxCharacter.Text))
+            string.IsNullOrEmpty(VOFileListModded.FolderPath) ||
+            string.IsNullOrEmpty(VOFileListDst.FolderPath) ||
+            string.IsNullOrEmpty(TextBoxPakName.Text) ||
+            string.IsNullOrEmpty(TextBoxCharacter.Text))
         {
             e.CanExecute = false;
             return;
