@@ -18,22 +18,19 @@ Existing mods can be revived and packed within a few clicks. For modders making 
 There's no need for configuring your own UnrealPak setup. Here is what you need to do for the VO Reviver to work:
 
 - Download the VO Reviver
-- Prepare a set of vanilla VO files matching your mod characters, by downloading from my [Nexus Mods page](https://www.nexusmods.com/readyornot/mods/6324?tab=files), or by manually [extracting your local game files](https://unofficial-modding-guide.com/posts/thebasics/#extracting-game-files).
+- ~~Prepare a set of vanilla VO files matching your mod characters, by downloading from my [Nexus Mods page](https://www.nexusmods.com/readyornot/mods/6324?tab=files), or by manually [extracting your local game files](https://unofficial-modding-guide.com/posts/thebasics/#extracting-game-files).~~
 
 ## How to Use
 
-### 1. Select the folder of the vanilla VO
+### 1. Select vanilla VO character
 
-E.g. if your modded character is `SWATJudge`, the path should be `<SomePath>\SWATJudge`. The list view below will show all valid VO files after selecting the folder. Note that:
-
-- Character name will be auto-detected (also editable)
-- Zero padding format will be the same as the vanilla files
+There's **no need** to prepare the full set of vanilla VO files. Simply choose the desired character from the drop-down menu and you will see the full list of original VO filenames.
 
 ### 2. Select the folder of your modded VO
 
 E.g. if your modded character is `SWATJudge`, The path should be `<SomePath>\SWATJudge`. The list view below will show all valid VO files after selecting the folder.
 
-Subtitle files (in format of `sub_*.csv`) in this folder will be loaded. Note that subtitles are **not compulsory** and you may put in whatever languages supported by your mod.
+Subtitle files (in format of `sub_*.csv`) in this folder will also be loaded. Note that subtitles are **not compulsory** and you may put in whatever languages supported by your mod.
 
 ### 3. Edit your .pak name
 ### 4. Check the Character Name
