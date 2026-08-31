@@ -10,6 +10,7 @@ public class VOReviver(
     string character)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly string BlankOggPath = ".\\blank.ogg";
     private static readonly string InPakVOPath = "Content\\VO_PC";
 
     public async Task PakVOFilesAsync() => await Packer.PackAsync(destinationFolderPath);
@@ -24,7 +25,7 @@ public class VOReviver(
         Directory.CreateDirectory(newVOFolderPath);
 
         int numModdedVO = moddedVOManager.Files.Count;
-        IReadOnlyList<string> moddedVOFiles = moddedVOManager.Files;
+        var moddedVOFiles = moddedVOManager.Files;
 
         // Convert audio format and save to a temp folder if necessary
         if (!moddedVOManager.IsOgg)
@@ -50,16 +51,17 @@ public class VOReviver(
                 ++nextTypeCur;
             }
 
-            IReadOnlyList<string> originalFiles = originalVOManager.GetFiles(voType);
+            var originalFiles = originalVOManager.GetFiles(voType);
             bool hasOriginal = originalFiles.Count > 0;
 
             int j = i;
+            string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
 
             if (!hasOriginal)
             {
+                progress?.Report(new VOProgressReport(oldKey, VOProgressType.ExtraVOType));
                 while (j < nextTypeCur)
                 {
-                    progress?.Report(new VOProgressReport(moddedVOFiles[j], VOProgressType.ExtraVOType));
                     Logger.Info($"Extra file: \"{moddedVOFiles[j++]}\"");
                 }
                 continue;
@@ -68,7 +70,7 @@ public class VOReviver(
             foreach (string originalFile in originalFiles)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
+                
                 string newKey = Path.GetFileNameWithoutExtension(originalFile);
                 string dstFile = $"{newVOFolderPath}\\{Path.GetFileName(originalFile)}";
                 try
@@ -98,9 +100,32 @@ public class VOReviver(
 
         foreach (string voType in originalVOManager.GetVOTypes())
         {
-            if (!moddedVOManager.HasVOType(voType))
+            if (moddedVOManager.HasVOType(voType))
             {
-                progress?.Report(new VOProgressReport(voType, VOProgressType.MissingVOType));
+                continue;
+            }
+
+            var originalFiles = originalVOManager.GetFiles(voType);
+            foreach (string originalFile in originalFiles)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string dstFile = $"{newVOFolderPath}\\{Path.GetFileName(originalFile)}";
+                progress?.Report(new VOProgressReport(Path.GetFileName(originalFile), VOProgressType.MissingVOType));
+                try
+                {
+                    await FileHandler.CopyAsync(BlankOggPath, dstFile, cancellationToken);
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    progress?.Report(new VOProgressReport(BlankOggPath, VOProgressType.Error));
+                    Logger.Error($"Failed to copy due to unauthorized access: " +
+                        $"{BlankOggPath}\n{e.Message}");
+                }
+                catch (IOException e)
+                {
+                    progress?.Report(new VOProgressReport(BlankOggPath, VOProgressType.Error));
+                    Logger.Error($"Failed to copy: {BlankOggPath}\n{e.Message}");
+                }
             }
         }
 
