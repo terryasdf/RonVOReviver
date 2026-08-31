@@ -117,7 +117,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        Logger.Info($"Original character chosen: {character} ({txtPath})");
+        Logger.Debug($"Original character chosen: {character} ({txtPath})");
         VOFileListOriginal.ClearItems();
         _originalVOManager = null;
 
