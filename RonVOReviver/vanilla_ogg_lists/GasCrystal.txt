@@ -1,0 +1,11 @@
+[BARK]Found_01.ogg 
+[BARK]Found_02.ogg 
+[BARK]Found_03.ogg 
+[BARK]Found_04.ogg 
+[BARK]Found_05.ogg 
+[BARK]Found_06.ogg 
+[BARK]Hiding_01.ogg 
+[BARK]Hiding_02.ogg 
+[BARK]Hiding_03.ogg 
+[BARK]Hiding_04.ogg 
+[BARK]Hiding_05.ogg 
