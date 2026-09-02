@@ -161,9 +161,14 @@ public partial class MainWindow : Window
         }
     }
 
-    private void VOFileListModded_FolderSelect(object sender, RoutedEventArgs e)
+    private async Task LoadModdedFolder(string folderPath)
     {
-        Logger.Info($"Modded VO Folder chosen: {VOFileListModded.FolderPath}");
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            return;
+        }
+
+        Logger.Info($"Modded VO Folder chosen: {folderPath}");
         VOFileListModded.IsEnabled = false;
         VOFileListModded.ClearItems();
         _moddedVOManager = null;
@@ -183,15 +188,14 @@ public partial class MainWindow : Window
                         break;
                 }
             });
-            _moddedVOManager = new ModdedVOManager(VOFileListModded.FolderPath, progress);
+            _moddedVOManager = await Task.Run(() => new ModdedVOManager(folderPath, progress));
 
             if (skippedVOFiles.Count > 0)
             {
-                string message = $"{_messageBoxFormatExceptionText}\n{String.Join("\n", skippedVOFiles)}";
+                string message = $"{_messageBoxFormatExceptionText}\n{string.Join("\n", skippedVOFiles)}";
                 ShowWarningMessageBox(message);
             }
 
-            VOFileListModded.IsEnabled = true;
             TextBlockProgress.SetResourceReference(TextBlock.TextProperty,
                 "MainWindow.TextBlockProgess.LoadedModded.Text");
         }
@@ -207,6 +211,16 @@ public partial class MainWindow : Window
             string message = $"{_messageBoxFolderErrorText}\n{ex.Message}";
             ShowErrorMessageBox(message);
         }
+        finally
+        {
+            VOFileListModded.IsEnabled = true;
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    private async void VOFileListModded_FolderSelect(object sender, RoutedEventArgs e)
+    {
+        await LoadModdedFolder(VOFileListModded.FolderPath);
     }
 
     private void TextBoxPakName_TextChanged(object sender, TextChangedEventArgs e)
@@ -237,24 +251,26 @@ public partial class MainWindow : Window
 
     private async void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
     {
-        if (_originalVOManager == null || _moddedVOManager == null)
-        {
-            return;
-        }
-
-        Debug.Assert(!String.IsNullOrEmpty(VOFileListDst.FolderPath));
-        Debug.Assert(!String.IsNullOrEmpty(TextBoxPakName.Text));
-
         _isProcessing = true;
         CommandManager.InvalidateRequerySuggested();
-        VOFileListDst.ClearItems();
-
-        VOFileListMissing.ClearItems();
-        VOFileListExtra.ClearItems();
-        List<string> FailedFiles = [];
 
         try
         {
+            await LoadModdedFolder(VOFileListModded.FolderPath);
+
+            if (_originalVOManager == null || _moddedVOManager == null)
+            {
+                return;
+            }
+
+            Debug.Assert(!string.IsNullOrEmpty(VOFileListDst.FolderPath));
+            Debug.Assert(!string.IsNullOrEmpty(TextBoxPakName.Text));
+
+            VOFileListDst.ClearItems();
+            VOFileListMissing.ClearItems();
+            VOFileListExtra.ClearItems();
+            List<string> FailedFiles = [];
+
             string pakFolderPath = Path.Combine(VOFileListDst.FolderPath, TextBoxPakName.Text);
             VOReviver reviver = new(
                 _originalVOManager,
@@ -285,7 +301,7 @@ public partial class MainWindow : Window
             await reviver.CopyVOFilesAsync(progress);
             if (FailedFiles.Count > 0)
             {
-                string message = $"{_messageBoxFileErrorText}\n{String.Join("\n", FailedFiles)}";
+                string message = $"{_messageBoxFileErrorText}\n{string.Join("\n", FailedFiles)}";
                 ShowWarningMessageBox(message);
             }
 
@@ -315,8 +331,8 @@ public partial class MainWindow : Window
     private void SaveCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
         e.CanExecute = !_isProcessing &&
-            !String.IsNullOrEmpty(VOFileListDst.FolderPath) &&
-            !String.IsNullOrEmpty(TextBoxPakName.Text);
+            !string.IsNullOrEmpty(VOFileListDst.FolderPath) &&
+            !string.IsNullOrEmpty(TextBoxPakName.Text);
     }
 
     private async void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)

@@ -16,9 +16,13 @@ public class VOManager
 
     public static string GetVOType(string file)
     {
-        string[] components = Path.GetFileName(file).Split('_');
+        string[] components = Path.GetFileName(file).ToLower().Split('_');
+        if (components.Length == 1)
+        {
+            return components[0];
+        }
         Array.Resize(ref components, components.Length - 1);
-        return string.Join("_", components).ToLower();
+        return string.Join("_", components);
     }
 
     public static string GetVOType(string file, out string index)

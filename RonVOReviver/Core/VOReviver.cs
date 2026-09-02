@@ -20,14 +20,14 @@ public class VOReviver(
     private static async Task CopyVOFileAsync(string moddedFile, string originalFile, string dstFolder,
         IProgress<VOProgressReport>? progress = null,
         SubtitleHandler? subtitleHandler = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
         string oldKey = Path.GetFileNameWithoutExtension(moddedFile);
         string newKey = Path.GetFileNameWithoutExtension(originalFile);
         string dstFile = Path.Combine(dstFolder, Path.GetFileName(originalFile));
         try
         {
-            await FileHandler.CopyAsync(moddedFile, dstFile, cancellationToken);
+            await FileHandler.CopyAsync(moddedFile, dstFile, ct);
             progress?.Report(new VOProgressReport(dstFile, VOProgressType.FileCopied));
             subtitleHandler?.WriteLine(oldKey, newKey);
         }
@@ -41,6 +41,41 @@ public class VOReviver(
         {
             progress?.Report(new VOProgressReport(moddedFile, VOProgressType.Error));
             Logger.Error($"Failed to copy: {moddedFile}\n{e.Message}");
+        }
+    }
+
+    private static async Task CopyByRangeAsync(IReadOnlyList<string> moddedFiles,
+        IReadOnlyList<string> originalFiles,
+        string dstFolder, int start, int end,
+        IProgress<VOProgressReport>? progress = null,
+        SubtitleHandler? subtitleHandler = null,
+        CancellationToken ct = default)
+    {
+        int i = start;
+        bool notFirstRun = false;
+        foreach (string originalFile in originalFiles)
+        {
+            ct.ThrowIfCancellationRequested();
+            await CopyVOFileAsync(moddedFiles[i], originalFile, dstFolder,
+                progress, subtitleHandler, ct);
+            if (++i == end)
+            {
+                i = start;
+                notFirstRun = true;
+            }
+        }
+
+        if (notFirstRun)
+        {
+            return;
+        }
+
+        // If there are more modded files than original, then keep the remaining.
+        for (; i < end; ++i)
+        {
+            ct.ThrowIfCancellationRequested();
+            await CopyVOFileAsync(moddedFiles[i], moddedFiles[i], dstFolder,
+                progress, subtitleHandler, ct);
         }
     }
 
@@ -78,34 +113,23 @@ public class VOReviver(
                 ++nextTypeCur;
             }
 
-            var originalFiles = originalVOManager.GetFiles(voType);
-            bool hasOriginal = originalFiles.Count > 0;
 
-            int j = i;
-
-            if (!hasOriginal)
+            if (originalVOManager.HasVOType(voType))
             {
-                progress?.Report(
-                    new VOProgressReport(Path.GetFileNameWithoutExtension(moddedVOFiles[j]),
-                    VOProgressType.ExtraVOType));
-                for (; j < nextTypeCur; ++j)
-                {
-                    Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
-                    await CopyVOFileAsync(moddedVOFiles[j], moddedVOFiles[j],
-                        newVOFolderPath, progress, subtitleHandler, ct);
-                }
+                var originalFiles = originalVOManager.GetFiles(voType);
+                await CopyByRangeAsync(moddedVOFiles, originalFiles, newVOFolderPath,
+                    i, nextTypeCur, progress, subtitleHandler, ct);
                 continue;
             }
 
-            foreach (string originalFile in originalFiles)
+            progress?.Report(
+                new VOProgressReport(Path.GetFileNameWithoutExtension(voType),
+                    VOProgressType.ExtraVOType));
+            for (int j = i; j < nextTypeCur; ++j)
             {
-                ct.ThrowIfCancellationRequested();
-                await CopyVOFileAsync(moddedVOFiles[j], originalFile, newVOFolderPath,
-                    progress, subtitleHandler, ct);
-                if (++j == nextTypeCur)
-                {
-                    j = i;
-                }
+                Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
+                await CopyVOFileAsync(moddedVOFiles[j], moddedVOFiles[j],
+                    newVOFolderPath, progress, subtitleHandler, ct);
             }
         }
 
@@ -125,17 +149,8 @@ public class VOReviver(
             if (voType.EndsWith('s') && moddedVOManager.HasVOType(voType[..^1]))
             {
                 moddedVOFiles = moddedVOManager.GetFiles(voType[..^1]);
-                int i = 0;
-                foreach (string originalFile in originalFiles)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    await CopyVOFileAsync(moddedVOFiles[i], originalFile, newVOFolderPath,
-                        progress, subtitleHandler, ct);
-                    if (++i == moddedVOFiles.Count)
-                    {
-                        i = 0;
-                    }
-                }
+                await CopyByRangeAsync(moddedVOFiles, originalFiles, newVOFolderPath,
+                    0, moddedVOFiles.Count, progress, subtitleHandler, ct);
                 continue;
             }
 
@@ -144,7 +159,8 @@ public class VOReviver(
             foreach (string originalFile in originalFiles)
             {
                 ct.ThrowIfCancellationRequested();
-                await CopyVOFileAsync(BlankOggPath, originalFile, newVOFolderPath, progress, cancellationToken: ct);
+                await CopyVOFileAsync(BlankOggPath, originalFile, newVOFolderPath,
+                    progress, ct: ct);
             }
         }
 
