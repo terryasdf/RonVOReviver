@@ -17,7 +17,7 @@ public class VOReviver(
 
     public async Task PakVOFilesAsync() => await Packer.PackAsync(destinationFolderPath);
 
-    private async Task CopyVOFileAsync(string moddedFile, string originalFile, string dstFolder,
+    private static async Task CopyVOFileAsync(string moddedFile, string originalFile, string dstFolder,
         IProgress<VOProgressReport>? progress = null,
         SubtitleHandler? subtitleHandler = null,
         CancellationToken cancellationToken = default)
@@ -116,11 +116,12 @@ public class VOReviver(
                 continue;
             }
 
+            progress?.Report(new VOProgressReport(Path.GetFileName(voType), VOProgressType.MissingVOType));
+
             var originalFiles = originalVOManager.GetFiles(voType);
             foreach (string originalFile in originalFiles)
             {
                 ct.ThrowIfCancellationRequested();
-                progress?.Report(new VOProgressReport(Path.GetFileName(originalFile), VOProgressType.MissingVOType));
                 await CopyVOFileAsync(BlankOggPath, originalFile, newVOFolderPath, progress, cancellationToken: ct);
             }
         }
