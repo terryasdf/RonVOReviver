@@ -17,8 +17,35 @@ public class VOReviver(
 
     public async Task PakVOFilesAsync() => await Packer.PackAsync(destinationFolderPath);
 
-    public async Task CopyVOFilesAsync(IProgress<VOProgressReport>? progress = null,
+    private async Task CopyVOFileAsync(string moddedFile, string originalFile, string dstFolder,
+        IProgress<VOProgressReport>? progress = null,
+        SubtitleHandler? subtitleHandler = null,
         CancellationToken cancellationToken = default)
+    {
+        string oldKey = Path.GetFileNameWithoutExtension(moddedFile);
+        string newKey = Path.GetFileNameWithoutExtension(originalFile);
+        string dstFile = Path.Combine(dstFolder, Path.GetFileName(originalFile));
+        try
+        {
+            await FileHandler.CopyAsync(moddedFile, dstFile, cancellationToken);
+            progress?.Report(new VOProgressReport(dstFile, VOProgressType.FileCopied));
+            subtitleHandler?.WriteLine(oldKey, newKey);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            progress?.Report(new VOProgressReport(moddedFile, VOProgressType.Error));
+            Logger.Error($"Failed to copy due to unauthorized access: " +
+                $"{moddedFile}\n{e.Message}");
+        }
+        catch (IOException e)
+        {
+            progress?.Report(new VOProgressReport(moddedFile, VOProgressType.Error));
+            Logger.Error($"Failed to copy: {moddedFile}\n{e.Message}");
+        }
+    }
+
+    public async Task CopyVOFilesAsync(IProgress<VOProgressReport>? progress = null,
+        CancellationToken ct = default)
     {
         // Clear destination directory
         string newVOFolderPath = Path.Combine(destinationFolderPath, InPakVOPath, character);
@@ -38,14 +65,11 @@ public class VOReviver(
 
         int nextTypeCur = 0;
         await using SubtitleHandler subtitleHandler = await SubtitleHandler.CreateAsync(
-            moddedVOManager.FolderPath,
-            newVOFolderPath,
-            progress,
-            cancellationToken);
+            moddedVOManager.FolderPath, newVOFolderPath, progress, ct);
 
         for (int i = 0; i < numModdedVO; i = nextTypeCur)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            ct.ThrowIfCancellationRequested();
             // Find all files of one voType
             string voType = VOManager.GetVOType(moddedVOFiles[i]);
             while (nextTypeCur < numModdedVO &&
@@ -59,44 +83,25 @@ public class VOReviver(
 
             int j = i;
 
-
             if (!hasOriginal)
             {
                 progress?.Report(
                     new VOProgressReport(Path.GetFileNameWithoutExtension(moddedVOFiles[j]),
                     VOProgressType.ExtraVOType));
-                while (j < nextTypeCur)
+                for (; j < nextTypeCur; ++j)
                 {
-                    Logger.Info($"Extra file: \"{moddedVOFiles[j++]}\"");
+                    Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
+                    await CopyVOFileAsync(moddedVOFiles[j], moddedVOFiles[j],
+                        newVOFolderPath, progress, subtitleHandler, ct);
                 }
                 continue;
             }
 
             foreach (string originalFile in originalFiles)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
-                string newKey = Path.GetFileNameWithoutExtension(originalFile);
-                string dstFile = Path.Combine(newVOFolderPath, Path.GetFileName(originalFile));
-                try
-                {
-                    await FileHandler.CopyAsync(moddedVOFiles[j], dstFile, cancellationToken);
-                    progress?.Report(new VOProgressReport(dstFile, VOProgressType.FileCopied));
-                    subtitleHandler.WriteLine(oldKey, newKey);
-                }
-                catch (UnauthorizedAccessException e)
-                {
-                    progress?.Report(new VOProgressReport(moddedVOFiles[j], VOProgressType.Error));
-                    Logger.Error($"Failed to copy due to unauthorized access: " +
-                        $"{moddedVOFiles[j]}\n{e.Message}");
-                }
-                catch (IOException e)
-                {
-                    progress?.Report(new VOProgressReport(moddedVOFiles[j], VOProgressType.Error));
-                    Logger.Error($"Failed to copy: {moddedVOFiles[j]}\n{e.Message}");
-                }
-
+                ct.ThrowIfCancellationRequested();
+                await CopyVOFileAsync(moddedVOFiles[j], originalFile, newVOFolderPath,
+                    progress, subtitleHandler, ct);
                 if (++j == nextTypeCur)
                 {
                     j = i;
@@ -114,24 +119,9 @@ public class VOReviver(
             var originalFiles = originalVOManager.GetFiles(voType);
             foreach (string originalFile in originalFiles)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                string dstFile = Path.Combine(newVOFolderPath, Path.GetFileName(originalFile));
+                ct.ThrowIfCancellationRequested();
                 progress?.Report(new VOProgressReport(Path.GetFileName(originalFile), VOProgressType.MissingVOType));
-                try
-                {
-                    await FileHandler.CopyAsync(BlankOggPath, dstFile, cancellationToken);
-                }
-                catch (UnauthorizedAccessException e)
-                {
-                    progress?.Report(new VOProgressReport(BlankOggPath, VOProgressType.Error));
-                    Logger.Error($"Failed to copy due to unauthorized access: " +
-                        $"{BlankOggPath}\n{e.Message}");
-                }
-                catch (IOException e)
-                {
-                    progress?.Report(new VOProgressReport(BlankOggPath, VOProgressType.Error));
-                    Logger.Error($"Failed to copy: {BlankOggPath}\n{e.Message}");
-                }
+                await CopyVOFileAsync(BlankOggPath, originalFile, newVOFolderPath, progress, cancellationToken: ct);
             }
         }
 
