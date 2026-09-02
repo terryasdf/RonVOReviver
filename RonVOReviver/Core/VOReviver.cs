@@ -113,24 +113,24 @@ public class VOReviver(
                 ++nextTypeCur;
             }
 
-            int j = i;
-            if (!originalVOManager.HasVOType(voType))
+
+            if (originalVOManager.HasVOType(voType))
             {
-                progress?.Report(
-                    new VOProgressReport(Path.GetFileNameWithoutExtension(moddedVOFiles[j]),
-                    VOProgressType.ExtraVOType));
-                for (; j < nextTypeCur; ++j)
-                {
-                    Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
-                    await CopyVOFileAsync(moddedVOFiles[j], moddedVOFiles[j],
-                        newVOFolderPath, progress, subtitleHandler, ct);
-                }
+                var originalFiles = originalVOManager.GetFiles(voType);
+                await CopyByRangeAsync(moddedVOFiles, originalFiles, newVOFolderPath,
+                    i, nextTypeCur, progress, subtitleHandler, ct);
                 continue;
             }
 
-            var originalFiles = originalVOManager.GetFiles(voType);
-            await CopyByRangeAsync(moddedVOFiles, originalFiles, newVOFolderPath,
-                i, nextTypeCur, progress, subtitleHandler, ct);
+            progress?.Report(
+                new VOProgressReport(Path.GetFileNameWithoutExtension(voType),
+                    VOProgressType.ExtraVOType));
+            for (int j = i; j < nextTypeCur; ++j)
+            {
+                Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
+                await CopyVOFileAsync(moddedVOFiles[j], moddedVOFiles[j],
+                    newVOFolderPath, progress, subtitleHandler, ct);
+            }
         }
 
         foreach (string voType in originalVOManager.GetVOTypes())
