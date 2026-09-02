@@ -8,14 +8,14 @@ namespace RonVOReviver.Core;
 public class VOReviver(
     VOManager originalVOManager,
     ModdedVOManager moddedVOManager,
-    string destinationFolderPath,
+    string pakFolderPath,
     string character)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly string BlankOggPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Audio", "blank.ogg");
     private static readonly string InPakVOPath = Path.Combine("Content", "VO_PC");
 
-    public async Task PakVOFilesAsync() => await Packer.PackAsync(destinationFolderPath);
+    public async Task PakVOFilesAsync() => await Packer.PackAsync(pakFolderPath);
 
     private static async Task CopyVOFileAsync(string moddedFile, string originalFile, string dstFolder,
         IProgress<VOProgressReport>? progress = null,
@@ -48,9 +48,9 @@ public class VOReviver(
         CancellationToken ct = default)
     {
         // Clear destination directory
-        string newVOFolderPath = Path.Combine(destinationFolderPath, InPakVOPath, character);
-        string tempFolderPath = Path.Combine(destinationFolderPath, "temp");
-        FileHandler.ClearDirectory(destinationFolderPath);
+        string newVOFolderPath = Path.Combine(pakFolderPath, InPakVOPath, character);
+        string tempFolderPath = Path.Combine(pakFolderPath, "temp");
+        FileHandler.ClearDirectory(pakFolderPath);
         Directory.CreateDirectory(newVOFolderPath);
 
         int numModdedVO = moddedVOManager.Files.Count;
