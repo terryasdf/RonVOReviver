@@ -116,9 +116,31 @@ public class VOReviver(
                 continue;
             }
 
-            progress?.Report(new VOProgressReport(Path.GetFileName(voType), VOProgressType.MissingVOType));
-
             var originalFiles = originalVOManager.GetFiles(voType);
+
+            /* For SWAT characters most VO types have an "S" (silent) variant.
+             * If modded VO does not have the "S" variant but has the non-"S" variant,
+             * we replace the "S" variant with non-"S" variant instead of blank audio.
+             */
+            if (voType.EndsWith('s') && moddedVOManager.HasVOType(voType[..^1]))
+            {
+                moddedVOFiles = moddedVOManager.GetFiles(voType[..^1]);
+                int i = 0;
+                foreach (string originalFile in originalFiles)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await CopyVOFileAsync(moddedVOFiles[i], originalFile, newVOFolderPath,
+                        progress, subtitleHandler, ct);
+                    if (++i == moddedVOFiles.Count)
+                    {
+                        i = 0;
+                    }
+                }
+                continue;
+            }
+
+            // Replace with blank audio otherwise.
+            progress?.Report(new VOProgressReport(Path.GetFileName(voType), VOProgressType.MissingVOType));
             foreach (string originalFile in originalFiles)
             {
                 ct.ThrowIfCancellationRequested();
