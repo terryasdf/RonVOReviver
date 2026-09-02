@@ -16,7 +16,7 @@
     <s:String x:Key="MainWindow.TextBlockProgess.CopiedVO.Text">已复制语音文件</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.PakSuccess.Text">.pak打包成功</s:String>
     <s:String x:Key="MainWindow.TextBlockMissing.Text">Mod语音缺失, 用空音频替代: </s:String>
-    <s:String x:Key="MainWindow.TextBlockExtra.Text">Mod中发现了原版未出现语音种类, 已跳过: </s:String>
+    <s:String x:Key="MainWindow.TextBlockExtra.Text">原版未出现语音种类, 仍保留: </s:String>
     <s:String x:Key="MainWindow.MessageBoxError.Caption">错误</s:String>
     <s:String x:Key="MainWindow.MessageBoxFormatException.Text">下列文件命名格式不合规，已忽略: </s:String>
     <s:String x:Key="MainWindow.MessageBoxFolderError.Text">无法访问文件夹: </s:String>

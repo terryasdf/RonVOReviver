@@ -16,7 +16,7 @@
     <s:String x:Key="MainWindow.TextBlockProgess.CopiedVO.Text">Copied VO files.</s:String>
     <s:String x:Key="MainWindow.TextBlockProgess.PakSuccess.Text">.pak successfully generated.</s:String>
     <s:String x:Key="MainWindow.TextBlockMissing.Text">Missing in modded VO, replaced with blank .ogg: </s:String>
-    <s:String x:Key="MainWindow.TextBlockExtra.Text">Redundant VO types skipped for modded VO: </s:String>
+    <s:String x:Key="MainWindow.TextBlockExtra.Text">Redundant VO types (still kept): </s:String>
     <s:String x:Key="MainWindow.MessageBoxError.Caption">Error</s:String>
     <s:String x:Key="MainWindow.MessageBoxFormatException.Text">The following files are skipped due to incorrect format: </s:String>
     <s:String x:Key="MainWindow.MessageBoxFolderError.Text">Failed to read the folder: </s:String>

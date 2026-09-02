@@ -255,11 +255,11 @@ public partial class MainWindow : Window
 
         try
         {
-            string destinationFolderPath = Path.Combine(VOFileListDst.FolderPath, TextBoxPakName.Text);
+            string pakFolderPath = Path.Combine(VOFileListDst.FolderPath, TextBoxPakName.Text);
             VOReviver reviver = new(
                 _originalVOManager,
                 _moddedVOManager,
-                destinationFolderPath,
+                pakFolderPath,
                 TextBoxCharacter.Text);
 
             var progress = new Progress<VOProgressReport>(report =>

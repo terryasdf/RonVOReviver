@@ -8,22 +8,49 @@ namespace RonVOReviver.Core;
 public class VOReviver(
     VOManager originalVOManager,
     ModdedVOManager moddedVOManager,
-    string destinationFolderPath,
+    string pakFolderPath,
     string character)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly string BlankOggPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Audio", "blank.ogg");
     private static readonly string InPakVOPath = Path.Combine("Content", "VO_PC");
 
-    public async Task PakVOFilesAsync() => await Packer.PackAsync(destinationFolderPath);
+    public async Task PakVOFilesAsync() => await Packer.PackAsync(pakFolderPath);
 
-    public async Task CopyVOFilesAsync(IProgress<VOProgressReport>? progress = null,
+    private static async Task CopyVOFileAsync(string moddedFile, string originalFile, string dstFolder,
+        IProgress<VOProgressReport>? progress = null,
+        SubtitleHandler? subtitleHandler = null,
         CancellationToken cancellationToken = default)
     {
+        string oldKey = Path.GetFileNameWithoutExtension(moddedFile);
+        string newKey = Path.GetFileNameWithoutExtension(originalFile);
+        string dstFile = Path.Combine(dstFolder, Path.GetFileName(originalFile));
+        try
+        {
+            await FileHandler.CopyAsync(moddedFile, dstFile, cancellationToken);
+            progress?.Report(new VOProgressReport(dstFile, VOProgressType.FileCopied));
+            subtitleHandler?.WriteLine(oldKey, newKey);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            progress?.Report(new VOProgressReport(moddedFile, VOProgressType.Error));
+            Logger.Error($"Failed to copy due to unauthorized access: " +
+                $"{moddedFile}\n{e.Message}");
+        }
+        catch (IOException e)
+        {
+            progress?.Report(new VOProgressReport(moddedFile, VOProgressType.Error));
+            Logger.Error($"Failed to copy: {moddedFile}\n{e.Message}");
+        }
+    }
+
+    public async Task CopyVOFilesAsync(IProgress<VOProgressReport>? progress = null,
+        CancellationToken ct = default)
+    {
         // Clear destination directory
-        string newVOFolderPath = Path.Combine(destinationFolderPath, InPakVOPath, character);
-        string tempFolderPath = Path.Combine(destinationFolderPath, "temp");
-        FileHandler.ClearDirectory(destinationFolderPath);
+        string newVOFolderPath = Path.Combine(pakFolderPath, InPakVOPath, character);
+        string tempFolderPath = Path.Combine(pakFolderPath, "temp");
+        FileHandler.ClearDirectory(pakFolderPath);
         Directory.CreateDirectory(newVOFolderPath);
 
         int numModdedVO = moddedVOManager.Files.Count;
@@ -38,14 +65,11 @@ public class VOReviver(
 
         int nextTypeCur = 0;
         await using SubtitleHandler subtitleHandler = await SubtitleHandler.CreateAsync(
-            moddedVOManager.FolderPath,
-            newVOFolderPath,
-            progress,
-            cancellationToken);
+            moddedVOManager.FolderPath, newVOFolderPath, progress, ct);
 
         for (int i = 0; i < numModdedVO; i = nextTypeCur)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            ct.ThrowIfCancellationRequested();
             // Find all files of one voType
             string voType = VOManager.GetVOType(moddedVOFiles[i]);
             while (nextTypeCur < numModdedVO &&
@@ -59,44 +83,25 @@ public class VOReviver(
 
             int j = i;
 
-
             if (!hasOriginal)
             {
                 progress?.Report(
                     new VOProgressReport(Path.GetFileNameWithoutExtension(moddedVOFiles[j]),
                     VOProgressType.ExtraVOType));
-                while (j < nextTypeCur)
+                for (; j < nextTypeCur; ++j)
                 {
-                    Logger.Info($"Extra file: \"{moddedVOFiles[j++]}\"");
+                    Logger.Info($"Extra file: \"{moddedVOFiles[j]}\"");
+                    await CopyVOFileAsync(moddedVOFiles[j], moddedVOFiles[j],
+                        newVOFolderPath, progress, subtitleHandler, ct);
                 }
                 continue;
             }
 
             foreach (string originalFile in originalFiles)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                string oldKey = Path.GetFileNameWithoutExtension(moddedVOFiles[j]);
-                string newKey = Path.GetFileNameWithoutExtension(originalFile);
-                string dstFile = Path.Combine(newVOFolderPath, Path.GetFileName(originalFile));
-                try
-                {
-                    await FileHandler.CopyAsync(moddedVOFiles[j], dstFile, cancellationToken);
-                    progress?.Report(new VOProgressReport(dstFile, VOProgressType.FileCopied));
-                    subtitleHandler.WriteLine(oldKey, newKey);
-                }
-                catch (UnauthorizedAccessException e)
-                {
-                    progress?.Report(new VOProgressReport(moddedVOFiles[j], VOProgressType.Error));
-                    Logger.Error($"Failed to copy due to unauthorized access: " +
-                        $"{moddedVOFiles[j]}\n{e.Message}");
-                }
-                catch (IOException e)
-                {
-                    progress?.Report(new VOProgressReport(moddedVOFiles[j], VOProgressType.Error));
-                    Logger.Error($"Failed to copy: {moddedVOFiles[j]}\n{e.Message}");
-                }
-
+                ct.ThrowIfCancellationRequested();
+                await CopyVOFileAsync(moddedVOFiles[j], originalFile, newVOFolderPath,
+                    progress, subtitleHandler, ct);
                 if (++j == nextTypeCur)
                 {
                     j = i;
@@ -112,26 +117,34 @@ public class VOReviver(
             }
 
             var originalFiles = originalVOManager.GetFiles(voType);
+
+            /* For SWAT characters most VO types have an "S" (silent) variant.
+             * If modded VO does not have the "S" variant but has the non-"S" variant,
+             * we replace the "S" variant with non-"S" variant instead of blank audio.
+             */
+            if (voType.EndsWith('s') && moddedVOManager.HasVOType(voType[..^1]))
+            {
+                moddedVOFiles = moddedVOManager.GetFiles(voType[..^1]);
+                int i = 0;
+                foreach (string originalFile in originalFiles)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await CopyVOFileAsync(moddedVOFiles[i], originalFile, newVOFolderPath,
+                        progress, subtitleHandler, ct);
+                    if (++i == moddedVOFiles.Count)
+                    {
+                        i = 0;
+                    }
+                }
+                continue;
+            }
+
+            // Replace with blank audio otherwise.
+            progress?.Report(new VOProgressReport(Path.GetFileName(voType), VOProgressType.MissingVOType));
             foreach (string originalFile in originalFiles)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                string dstFile = Path.Combine(newVOFolderPath, Path.GetFileName(originalFile));
-                progress?.Report(new VOProgressReport(Path.GetFileName(originalFile), VOProgressType.MissingVOType));
-                try
-                {
-                    await FileHandler.CopyAsync(BlankOggPath, dstFile, cancellationToken);
-                }
-                catch (UnauthorizedAccessException e)
-                {
-                    progress?.Report(new VOProgressReport(BlankOggPath, VOProgressType.Error));
-                    Logger.Error($"Failed to copy due to unauthorized access: " +
-                        $"{BlankOggPath}\n{e.Message}");
-                }
-                catch (IOException e)
-                {
-                    progress?.Report(new VOProgressReport(BlankOggPath, VOProgressType.Error));
-                    Logger.Error($"Failed to copy: {BlankOggPath}\n{e.Message}");
-                }
+                ct.ThrowIfCancellationRequested();
+                await CopyVOFileAsync(BlankOggPath, originalFile, newVOFolderPath, progress, cancellationToken: ct);
             }
         }
 
