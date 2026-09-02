@@ -1,5 +1,7 @@
 ﻿using NLog;
-using RonVOReviver.Reviver;
+using RonVOReviver.Core;
+using RonVOReviver.Models;
+using RonVOReviver.Services;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -36,8 +38,8 @@ public partial class MainWindow : Window
         InitializeComponent();
         Title = $"RON VO Reviver (by terryzzz) {Application.ResourceAssembly.GetName().Version}";
         TextBoxPakName.Text = DefaultPakName;
-        DictionaryENUS.Source = new Uri("Languages/en-us.xaml", UriKind.Relative);
-        DictionaryZHCN.Source = new Uri("Languages/zh-cn.xaml", UriKind.Relative);
+        DictionaryENUS.Source = new Uri("Resources/Localization/en-us.xaml", UriKind.Relative);
+        DictionaryZHCN.Source = new Uri("Resources/Localization/zh-cn.xaml", UriKind.Relative);
         ResetDynamicResourcesMessageTexts();
         PopulateOriginalCharacters();
     }
@@ -68,7 +70,7 @@ public partial class MainWindow : Window
 
     private static string GetOriginalOggListsDirectory()
     {
-        return Path.Combine(AppContext.BaseDirectory, "vanilla_ogg_lists");
+        return Path.Combine(AppContext.BaseDirectory, "VanillaVoiceLists");
     }
 
     private void PopulateOriginalCharacters()

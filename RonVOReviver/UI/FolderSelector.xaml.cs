@@ -4,58 +4,57 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace RonVOReviver.UI
+namespace RonVOReviver.UI;
+
+/// <summary>
+/// Interaction logic for Selector.xaml
+/// </summary>
+public partial class FolderSelector : UserControl, INotifyPropertyChanged
 {
-    /// <summary>
-    /// Interaction logic for Selector.xaml
-    /// </summary>
-    public partial class FolderSelector : UserControl, INotifyPropertyChanged
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public static readonly RoutedEvent SelectEvent = EventManager.RegisterRoutedEvent(
+        "Select", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(FolderSelector));
+
+    public event RoutedEventHandler Select
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
+        add => AddHandler(SelectEvent, value);
+        remove => RemoveHandler(SelectEvent, value);
+    }
 
-        public static readonly RoutedEvent SelectEvent = EventManager.RegisterRoutedEvent(
-            "Select", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(FolderSelector));
+    public static readonly DependencyProperty FolderPathProperty = DependencyProperty.Register(
+        "FolderPath", typeof(string), typeof(FolderSelector));
 
-        public event RoutedEventHandler Select
+    public string FolderPath
+    {
+        get => (string)GetValue(FolderPathProperty);
+        set
         {
-            add => AddHandler(SelectEvent, value);
-            remove => RemoveHandler(SelectEvent, value);
+            SetValue(FolderPathProperty, value);
+            OnPropertyChanged();
         }
+    }
 
-        public static readonly DependencyProperty FolderPathProperty = DependencyProperty.Register(
-            "FolderPath", typeof(string), typeof(FolderSelector));
+    public FolderSelector()
+    {
+        InitializeComponent();
+        FolderPath = string.Empty;
+    }
 
-        public string FolderPath
+    private void ButtonSelect_Click(object sender, RoutedEventArgs e)
+    {
+        OpenFolderDialog dlg = new();
+        bool? result = dlg.ShowDialog();
+        if (result != true)
         {
-            get => (string)GetValue(FolderPathProperty);
-            set
-            {
-                SetValue(FolderPathProperty, value);
-                OnPropertyChanged();
-            }
+            return;
         }
+        FolderPath = dlg.FolderName;
+        RaiseEvent(new RoutedEventArgs(SelectEvent));
+    }
 
-        public FolderSelector()
-        {
-            InitializeComponent();
-            FolderPath = string.Empty;
-        }
-
-        private void ButtonSelect_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFolderDialog dlg = new();
-            bool? result = dlg.ShowDialog();
-            if (result != true)
-            {
-                return;
-            }
-            FolderPath = dlg.FolderName;
-            RaiseEvent(new RoutedEventArgs(SelectEvent));
-        }
-
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

@@ -1,10 +1,11 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using NLog;
+using RonVOReviver.Models;
 using System.Globalization;
 using System.IO;
 
-namespace RonVOReviver.Reviver;
+namespace RonVOReviver.Services;
 
 public class SubtitleHandler : IDisposable, IAsyncDisposable
 {

@@ -61,4 +61,3 @@ public partial class VOComboBoxFileList : UserControl
         RaiseEvent(new SelectionChangedEventArgs(SelectionChangedEvent, e.RemovedItems, e.AddedItems));
     }
 }
-

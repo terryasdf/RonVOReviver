@@ -1,7 +1,8 @@
 ﻿using NLog;
+using RonVOReviver.Models;
 using System.IO;
 
-namespace RonVOReviver.Reviver;
+namespace RonVOReviver.Core;
 
 public class OriginalVOManager(string path, IProgress<VOManagerProgressReport>? progress = null) : VOManager(path, progress)
 {
